@@ -1,0 +1,23 @@
+{
+  "name": "lifestream-flo",
+  "version": "1.0.0",
+  "description": "Family Calendar Progressive Web App with AI Agent Orchestration",
+  "private": true,
+  "workspaces": [
+    "packages/backend",
+    "packages/frontend"
+  ],
+  "scripts": {
+    "install:all": "npm install",
+    "test": "npm run test --workspaces",
+    "test:backend": "npm run test -w packages/backend",
+    "test:frontend": "npm run test -w packages/frontend",
+    "build": "npm run build --workspaces",
+    "dev:backend": "npm run dev -w packages/backend",
+    "dev:frontend": "npm run dev -w packages/frontend"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.3"
+  }
+}

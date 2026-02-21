@@ -2,12 +2,14 @@
 
 ## Overview
 
-The Consolidated Weekly Family Calendar with Time Tracking Dashboard is a web-based system that aggregates calendar events from multiple external sources (Google Calendar, Outlook, Kids School Newsletter, Kids Connect) into a unified weekly view. The system provides real-time visibility into family schedules and includes a time tracking dashboard that monitors time spent across five activity categories: Work, Family Time, Health/Fitness, Upskilling, and Relaxation.
+The Consolidated Weekly Family Calendar with Time Tracking Dashboard is an AI agent-based web system that aggregates calendar events from multiple external sources (Google Calendar, Outlook, Kids School Newsletter, Kids Connect) into a unified weekly view. The system leverages an agent orchestration layer to coordinate multiple specialized AI agents that handle querying external sources, parsing event data, classifying events, and aggregating information. The system provides real-time visibility into family schedules and includes a time tracking dashboard that monitors time spent across five activity categories: Work, Family Time, Health/Fitness, Upskilling, and Relaxation.
 
-The system architecture follows a modular design with clear separation of concerns:
-- **Calendar Integration Layer**: Handles connections to external calendar sources
+The system architecture follows an AI agent-based design with clear separation of concerns:
+- **Agent Orchestration Layer**: Coordinates multiple AI agents, manages task assignment, and aggregates results
+- **Calendar Query Agents**: AI agents that query external calendar sources using intelligent retrieval strategies
+- **Event Parser Agents**: AI agents that extract and structure event information from various data formats
+- **Event Classifier Agents**: AI agents that automatically categorize events using contextual understanding
 - **Synchronization Engine**: Manages real-time event updates and conflict resolution
-- **Event Classification Engine**: Automatically categorizes events and learns from user feedback
 - **Analytics & Dashboard Layer**: Computes time tracking metrics and generates visualizations
 - **Notification Engine**: Manages threshold alerts and summary distribution
 - **Persistence Layer**: Handles data storage, backup, and recovery
@@ -31,30 +33,32 @@ The system architecture follows a modular design with clear separation of concer
                          │
         ┌────────────────┼────────────────┐
         │                │                │
-┌───────▼──────┐  ┌──────▼──────┐  ┌─────▼──────────┐
-│ Calendar     │  │ Event       │  │ Analytics &    │
-│ Integration  │  │ Management  │  │ Notification   │
-│ Service      │  │ Service     │  │ Service        │
-└───────┬──────┘  └──────┬──────┘  └─────┬──────────┘
+┌───────▼──────────┐  ┌──▼──────────┐  ┌─▼──────────────┐
+│ Agent            │  │ Event       │  │ Analytics &    │
+│ Orchestration    │  │ Management  │  │ Notification   │
+│ Service          │  │ Service     │  │ Service        │
+└───────┬──────────┘  └──┬──────────┘  └─┬──────────────┘
         │                │               │
-        └────────────────┼───────────────┘
-                         │
-        ┌────────────────┼────────────────┐
-        │                │                │
-┌───────▼──────┐  ┌──────▼──────┐  ┌─────▼──────────┐
-│ Sync Engine  │  │ Event       │  │ Notification   │
-│ & Queue      │  │ Classifier  │  │ Queue          │
-└───────┬──────┘  └──────┬──────┘  └─────┬──────────┘
         │                │               │
-        └────────────────┼───────────────┘
-                         │
-        ┌────────────────┼────────────────┐
-        │                │                │
+┌───────▼──────────────────────────────────────────────┐
+│           Agent Orchestration Layer                  │
+│  ┌──────────────┐  ┌──────────────┐  ┌────────────┐ │
+│  │ Calendar     │  │ Event Parser │  │ Event      │ │
+│  │ Query Agents │  │ Agents       │  │ Classifier │ │
+│  │              │  │              │  │ Agents     │ │
+│  └──────────────┘  └──────────────┘  └────────────┘ │
+│                                                       │
+│  ┌──────────────────────────────────────────────┐   │
+│  │ Agent Task Queue & Result Aggregator         │   │
+│  └──────────────────────────────────────────────┘   │
+└───────┬───────────────────────────────────────────┬─┘
+        │                                           │
+        │                                           │
 ┌───────▼──────┐  ┌──────▼──────┐  ┌─────▼──────────┐
-│ PostgreSQL   │  │ Redis Cache │  │ Message Queue  │
-│ Database     │  │ (Sessions,  │  │ (Async Tasks)  │
-│              │  │  Metadata)  │  │                │
-└──────────────┘  └─────────────┘  └────────────────┘
+│ Sync Engine  │  │  DynamoDB   │  │ ElastiCache    │
+│ & Queue      │  │  Tables     │  │ (Sessions,     │
+│              │  │             │  │  Agent State)  │
+└───────┬──────┘  └─────────────┘  └────────────────┘
         │
 ┌───────▼──────────────────────────────────────────┐
 │ External Calendar Sources                        │
@@ -68,21 +72,41 @@ The system architecture follows a modular design with clear separation of concer
 External Calendar Sources
         │
         ▼
+┌──────────────────────────────┐
+│ Agent Orchestrator           │
+│ (Task Assignment & Routing)  │
+└──────────┬───────────────────┘
+           │
+    ┌──────┴──────┬──────────────┐
+    │             │              │
+    ▼             ▼              ▼
+┌─────────┐  ┌─────────┐  ┌──────────┐
+│Calendar │  │Calendar │  │ Event    │
+│Query    │  │Query    │  │ Parser   │
+│Agent 1  │  │Agent 2  │  │ Agent    │
+│(Google) │  │(Outlook)│  │ (School) │
+└────┬────┘  └────┬────┘  └────┬─────┘
+     │            │            │
+     └────────────┼────────────┘
+                  │
+                  ▼
+┌──────────────────────────────┐
+│ Agent Result Aggregator      │
+│ (Collect & Normalize Events) │
+└──────────┬───────────────────┘
+           │
+           ▼
 ┌──────────────────────┐
-│ Calendar Integrator  │ ◄─── Periodic Sync (5 min)
-│ (OAuth, API Clients) │
+│ Event Classifier     │
+│ Agent                │
+│ (AI-Based Category   │
+│  Assignment)         │
 └──────────┬───────────┘
            │
            ▼
 ┌──────────────────────┐
 │ Sync Engine          │
 │ (Conflict Detection) │
-└──────────┬───────────┘
-           │
-           ▼
-┌──────────────────────┐
-│ Event Classifier     │
-│ (Category Assignment)│
 └──────────┬───────────┘
            │
            ▼
@@ -111,27 +135,91 @@ External Calendar Sources
 
 ## Components and Interfaces
 
-### 1. Calendar Integration Service
+### 1. Agent Orchestration Service
 
-**Responsibility**: Connect to external calendar sources and retrieve events.
+**Responsibility**: Coordinate multiple AI agents, manage task assignment, aggregate results, and handle agent lifecycle.
 
 **Key Components**:
-- `GoogleCalendarConnector`: OAuth 2.0 integration with Google Calendar API
-- `OutlookCalendarConnector`: OAuth 2.0 integration with Microsoft Graph API
-- `KidsSchoolNewsletterParser`: Email parser for school newsletter events
-- `KidsConnectConnector`: API client for Kids Connect platform
-- `CalendarSourceRegistry`: Manages active calendar source connections
+- `AgentOrchestrator`: Central coordinator that manages all AI agents
+- `TaskQueue`: Manages pending agent tasks with priority and scheduling
+- `AgentRegistry`: Tracks available agents and their capabilities
+- `ResultAggregator`: Collects and normalizes results from multiple agents
+- `AgentHealthMonitor`: Monitors agent performance and availability
 
 **Interfaces**:
 
 ```typescript
-interface ICalendarConnector {
+interface IAgent {
+  id: string;
+  type: 'calendar_query' | 'event_parser' | 'event_classifier';
+  capabilities: string[];
+  status: 'idle' | 'busy' | 'failed' | 'offline';
+  execute(task: AgentTask): Promise<AgentResult>;
+  healthCheck(): Promise<boolean>;
+}
+
+interface AgentTask {
+  id: string;
+  type: 'query_calendar' | 'parse_events' | 'classify_event';
+  priority: 'high' | 'medium' | 'low';
+  payload: any;
+  sourceId?: string;
+  createdAt: Date;
+  assignedTo?: string; // Agent ID
+  retryCount: number;
+  maxRetries: number;
+}
+
+interface AgentResult {
+  taskId: string;
+  agentId: string;
+  status: 'success' | 'partial_success' | 'failed';
+  data: any;
+  errors?: string[];
+  executionTime: number; // milliseconds
+  completedAt: Date;
+}
+
+interface AgentOrchestrationConfig {
+  maxConcurrentAgents: number;
+  taskTimeout: number; // milliseconds
+  retryStrategy: 'exponential' | 'linear' | 'fixed';
+  retryDelay: number; // milliseconds
+  healthCheckInterval: number; // milliseconds
+}
+```
+
+### 2. Calendar Query Agent Service
+
+**Responsibility**: AI agents that query external calendar sources using intelligent retrieval strategies.
+
+**Key Components**:
+- `GoogleCalendarQueryAgent`: AI agent for querying Google Calendar
+- `OutlookCalendarQueryAgent`: AI agent for querying Outlook Calendar
+- `KidsConnectQueryAgent`: AI agent for querying Kids Connect platform
+- `AgentAuthManager`: Manages authentication for AI agents accessing external sources
+
+**Interfaces**:
+
+```typescript
+interface ICalendarQueryAgent extends IAgent {
+  sourceType: 'google' | 'outlook' | 'kids_connect';
   authenticate(credentials: AuthCredentials): Promise<AuthToken>;
-  fetchEvents(startDate: Date, endDate: Date): Promise<ExternalEvent[]>;
+  queryEvents(query: CalendarQuery): Promise<ExternalEvent[]>;
   createEvent(event: EventData): Promise<string>; // Returns event ID
   updateEvent(eventId: string, event: EventData): Promise<void>;
   deleteEvent(eventId: string): Promise<void>;
-  disconnect(): Promise<void>;
+}
+
+interface CalendarQuery {
+  startDate: Date;
+  endDate: Date;
+  filters?: {
+    keywords?: string[];
+    attendees?: string[];
+    categories?: string[];
+  };
+  maxResults?: number;
 }
 
 interface ExternalEvent {
@@ -144,6 +232,7 @@ interface ExternalEvent {
   location?: string;
   attendees?: string[];
   source: 'google' | 'outlook' | 'kids_school' | 'kids_connect';
+  rawData?: any; // Original data from source
 }
 
 interface CalendarSource {
@@ -154,18 +243,131 @@ interface CalendarSource {
   lastSyncTime: Date;
   syncStatus: 'active' | 'failed' | 'disconnected';
   retryCount: number;
+  assignedAgentId?: string;
 }
 ```
 
-### 2. Synchronization Engine
+### 3. Event Parser Agent Service
 
-**Responsibility**: Manage real-time event synchronization and conflict detection.
+**Responsibility**: AI agents that extract and structure event information from various data formats.
 
 **Key Components**:
-- `SyncScheduler`: Triggers sync operations every 5 minutes
+- `SchoolNewsletterParserAgent`: AI agent for parsing school newsletter emails
+- `UnstructuredDataParserAgent`: AI agent for parsing unstructured event data
+- `DataNormalizer`: Normalizes parsed data into standard event format
+
+**Interfaces**:
+
+```typescript
+interface IEventParserAgent extends IAgent {
+  parseFormat: 'email' | 'html' | 'pdf' | 'text' | 'json';
+  parse(rawData: string | Buffer): Promise<ParsedEvent[]>;
+  extractEventDetails(text: string): Promise<EventDetails>;
+  validateParsedData(event: ParsedEvent): boolean;
+}
+
+interface ParsedEvent {
+  title: string;
+  description?: string;
+  startTime?: Date;
+  endTime?: Date;
+  location?: string;
+  confidence: number; // 0-1, how confident the parser is
+  extractedFields: string[]; // Which fields were successfully extracted
+  rawText?: string;
+}
+
+interface EventDetails {
+  dates: Date[];
+  times: string[];
+  locations: string[];
+  participants: string[];
+  keywords: string[];
+}
+```
+
+### 4. Event Classifier Agent Service
+
+**Responsibility**: AI agents that automatically categorize events using contextual understanding and machine learning.
+
+**Key Components**:
+- `AIEventClassifier`: AI-powered event classification agent
+- `ContextAnalyzer`: Analyzes event context for better classification
+- `FeedbackLearner`: Learns from user corrections to improve classification
+- `CategoryPredictor`: Predicts activity categories with confidence scores
+
+**Interfaces**:
+
+```typescript
+interface IEventClassifierAgent extends IAgent {
+  classify(event: Event): Promise<ClassificationResult>;
+  classifyBatch(events: Event[]): Promise<ClassificationResult[]>;
+  learnFromFeedback(feedback: ClassificationFeedback): Promise<void>;
+  getConfidenceThreshold(): number;
+}
+
+interface ClassificationResult {
+  category: ActivityCategory;
+  confidence: number; // 0-1
+  requiresUserInput: boolean;
+  suggestedAlternatives?: ActivityCategory[];
+  reasoning?: string; // AI explanation for classification
+}
+
+interface ActivityCategory {
+  id: string;
+  name: 'Work' | 'Family Time' | 'Health/Fitness' | 'Upskilling' | 'Relaxation';
+  keywords: string[];
+  color: string;
+  icon: string;
+}
+
+interface ClassificationFeedback {
+  eventId: string;
+  assignedCategory: ActivityCategory;
+  userSelectedCategory: ActivityCategory;
+  timestamp: Date;
+  familyMemberId: string;
+  eventContext: {
+    title: string;
+    description?: string;
+    time: Date;
+  };
+}
+```
+
+### 5. Calendar Integration Service (Legacy Wrapper)
+
+**Responsibility**: Provides backward compatibility layer and manages agent-based calendar operations.
+
+**Key Components**:
+- `AgentBasedCalendarConnector`: Wraps agent operations in traditional interface
+- `CalendarSourceRegistry`: Manages active calendar source connections
+- `AgentTaskDispatcher`: Dispatches calendar operations to appropriate agents
+
+**Interfaces**:
+
+```typescript
+interface ICalendarConnector {
+  authenticate(credentials: AuthCredentials): Promise<AuthToken>;
+  fetchEvents(startDate: Date, endDate: Date): Promise<ExternalEvent[]>;
+  createEvent(event: EventData): Promise<string>; // Returns event ID
+  updateEvent(eventId: string, event: EventData): Promise<void>;
+  deleteEvent(eventId: string): Promise<void>;
+  disconnect(): Promise<void>;
+}
+```
+
+### 6. Synchronization Engine
+
+**Responsibility**: Manage real-time event synchronization, conflict detection, and agent task coordination.
+
+**Key Components**:
+- `SyncScheduler`: Triggers sync operations every 5 minutes and coordinates agents
 - `ConflictDetector`: Identifies overlapping events for same family member
 - `SyncQueue`: Manages pending sync operations with retry logic
 - `ChangeDetector`: Identifies new, updated, and deleted events
+- `AgentSyncCoordinator`: Coordinates multiple agents for parallel synchronization
 
 **Interfaces**:
 
@@ -198,44 +400,7 @@ interface SyncResult {
 }
 ```
 
-### 3. Event Classifier
-
-**Responsibility**: Automatically categorize events and learn from user feedback.
-
-**Key Components**:
-- `KeywordMatcher`: Matches event titles/descriptions against category keywords
-- `MLClassifier`: Machine learning model for confidence-based classification
-- `UserFeedbackLearner`: Updates classification rules based on user corrections
-- `CategoryAssigner`: Assigns categories to events
-
-**Interfaces**:
-
-```typescript
-interface ClassificationResult {
-  category: ActivityCategory;
-  confidence: number; // 0-1
-  requiresUserInput: boolean;
-  suggestedAlternatives?: ActivityCategory[];
-}
-
-interface ActivityCategory {
-  id: string;
-  name: 'Work' | 'Family Time' | 'Health/Fitness' | 'Upskilling' | 'Relaxation';
-  keywords: string[];
-  color: string;
-  icon: string;
-}
-
-interface ClassificationFeedback {
-  eventId: string;
-  assignedCategory: ActivityCategory;
-  userSelectedCategory: ActivityCategory;
-  timestamp: Date;
-  familyMemberId: string;
-}
-```
-
-### 4. Analytics & Dashboard Service
+### 7. Analytics & Dashboard Service
 
 **Responsibility**: Compute time tracking metrics and generate dashboard data.
 
@@ -275,7 +440,7 @@ interface DashboardQuery {
 }
 ```
 
-### 5. Notification Engine
+### 8. Notification Engine
 
 **Responsibility**: Manage threshold alerts and summary distribution.
 
@@ -331,7 +496,7 @@ interface ConsolidatedSummary {
 }
 ```
 
-### 6. Event Management Service
+### 9. Event Management Service
 
 **Responsibility**: Handle event creation, updates, and deletions.
 
@@ -383,7 +548,7 @@ interface AuditLogEntry {
 }
 ```
 
-### 7. Authentication & Access Control Service
+### 10. Authentication & Access Control Service
 
 **Responsibility**: Manage user authentication and authorization.
 
@@ -439,49 +604,305 @@ interface AccessControl {
 }
 ```
 
-### 8. Data Persistence Service
+### 11. Data Persistence Service
 
-**Responsibility**: Handle database operations and backup management.
+**Responsibility**: Handle DynamoDB operations and backup management.
 
 **Key Components**:
-- `DatabaseConnection`: Manages PostgreSQL connections
-- `BackupScheduler`: Triggers daily backups at 2:00 AM UTC
-- `BackupVerifier`: Validates backup integrity
-- `RecoveryManager`: Handles data restoration
+- `DynamoDBClient`: Manages DynamoDB connections and operations
+- `BackupManager`: Manages Point-in-Time Recovery and on-demand backups
+- `BackupMonitor`: Monitors backup status via CloudWatch
+- `RecoveryManager`: Handles data restoration from backups
 
 **Interfaces**:
 
 ```typescript
-interface BackupOperation {
-  id: string;
-  startTime: Date;
-  endTime?: Date;
-  status: 'in_progress' | 'completed' | 'failed';
-  backupSize: number; // bytes
-  verificationStatus: 'pending' | 'verified' | 'failed';
-  retentionUntil: Date;
-  errorMessage?: string;
+interface DynamoDBConfig {
+  tableName: string;
+  region: string;
+  endpoint?: string; // For local development
+  maxRetries: number;
+  timeout: number; // milliseconds
 }
 
-interface DatabaseHealthCheck {
-  isConnected: boolean;
+interface BackupStatus {
+  pitrEnabled: boolean;
+  latestRestorableTime: Date;
+  onDemandBackups: OnDemandBackup[];
+}
+
+interface OnDemandBackup {
+  backupArn: string;
+  backupName: string;
+  backupCreationDate: Date;
+  backupSizeBytes: number;
+  backupStatus: 'CREATING' | 'AVAILABLE' | 'DELETED';
+  retentionUntil: Date;
+}
+
+interface DynamoDBHealthCheck {
+  isAvailable: boolean;
   responseTime: number; // milliseconds
   lastCheck: Date;
   status: 'healthy' | 'degraded' | 'unavailable';
+  throttlingErrors: number;
 }
 ```
 
 ## Data Models
+
+### DynamoDB Single-Table Design
+
+The system uses a single-table design pattern for optimal performance and cost efficiency.
+
+**Table Name**: `FamilyCalendar`
+
+**Primary Key Structure**:
+- **PK (Partition Key)**: Entity identifier (e.g., `FAMILY#123`, `USER#abc`)
+- **SK (Sort Key)**: Sub-entity or relationship (e.g., `MEMBER#xyz`, `EVENT#evt1`)
+
+**Global Secondary Indexes**:
+1. **GSI1**: `GSI1PK` (PK) + `GSI1SK` (SK) - For querying by date ranges
+2. **GSI2**: `GSI2PK` (PK) + `GSI2SK` (SK) - For querying by status/type
+
+### Access Patterns and Key Design
+
+```typescript
+// Pattern 1: Get family by ID
+PK: FAMILY#<familyId>
+SK: FAMILY#<familyId>
+
+// Pattern 2: Get all family members
+PK: FAMILY#<familyId>
+SK: MEMBER#<memberId>
+
+// Pattern 3: Get all events for a family
+PK: FAMILY#<familyId>
+SK: EVENT#<eventId>
+
+// Pattern 4: Get events by date range (using GSI1)
+GSI1PK: FAMILY#<familyId>#EVENTS
+GSI1SK: <YYYY-MM-DD>#<eventId>
+
+// Pattern 5: Get user sessions
+PK: USER#<userId>
+SK: SESSION#<sessionToken>
+
+// Pattern 6: Get agent tasks by status (using GSI2)
+GSI2PK: AGENT_TASKS
+GSI2SK: <status>#<createdAt>
+
+// Pattern 7: Get weather data by date
+PK: FAMILY#<familyId>
+SK: WEATHER#<YYYY-MM-DD>
+
+// Pattern 8: Get activity thresholds
+PK: FAMILY#<familyId>
+SK: THRESHOLD#<category>
+
+// Pattern 9: Get notifications for user
+PK: USER#<userId>
+SK: NOTIFICATION#<timestamp>#<notificationId>
+
+// Pattern 10: Get agent by ID
+PK: AGENT#<agentId>
+SK: AGENT#<agentId>
+```
 
 ### Core Data Entities
 
 ```typescript
 // Family
 interface Family {
+  PK: string; // FAMILY#<familyId>
+  SK: string; // FAMILY#<familyId>
+  EntityType: 'FAMILY';
   id: string;
   name: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string; // ISO 8601
+  updatedAt: string; // ISO 8601
+}
+
+// Family Member
+interface FamilyMember {
+  PK: string; // FAMILY#<familyId>
+  SK: string; // MEMBER#<memberId>
+  EntityType: 'FAMILY_MEMBER';
+  id: string;
+  familyId: string;
+  email: string;
+  name: string;
+  passwordHash: string;
+  role: 'admin' | 'member';
+  joinedAt: string; // ISO 8601
+  status: 'active' | 'inactive' | 'removed';
+  lastLoginAt?: string; // ISO 8601
+}
+
+// Event
+interface Event {
+  PK: string; // FAMILY#<familyId>
+  SK: string; // EVENT#<eventId>
+  GSI1PK: string; // FAMILY#<familyId>#EVENTS
+  GSI1SK: string; // <YYYY-MM-DD>#<eventId>
+  EntityType: 'EVENT';
+  id: string;
+  familyId: string;
+  familyMemberId: string;
+  title: string;
+  description?: string;
+  startTime: string; // ISO 8601
+  endTime: string; // ISO 8601
+  location?: string;
+  category: 'Work' | 'Family Time' | 'Health/Fitness' | 'Upskilling' | 'Relaxation';
+  source: 'google' | 'outlook' | 'kids_school' | 'kids_connect' | 'extracurricular' | 'internal';
+  externalId?: string;
+  sourceId?: string;
+  attendees?: string[];
+  createdAt: string; // ISO 8601
+  updatedAt: string; // ISO 8601
+  createdBy: string;
+  isDeleted: boolean;
+  classifiedByAgentId?: string;
+  classificationConfidence?: number;
+}
+
+// Session
+interface Session {
+  PK: string; // USER#<userId>
+  SK: string; // SESSION#<sessionToken>
+  EntityType: 'SESSION';
+  id: string;
+  userId: string;
+  token: string;
+  expiresAt: string; // ISO 8601
+  createdAt: string; // ISO 8601
+  lastActivityAt: string; // ISO 8601
+  TTL: number; // Unix timestamp for DynamoDB TTL
+}
+
+// Agent
+interface Agent {
+  PK: string; // AGENT#<agentId>
+  SK: string; // AGENT#<agentId>
+  EntityType: 'AGENT';
+  id: string;
+  type: 'calendar_query' | 'event_parser' | 'event_classifier' | 'weather';
+  name: string;
+  capabilities: string[];
+  status: 'idle' | 'busy' | 'failed' | 'offline';
+  lastHealthCheck: string; // ISO 8601
+  createdAt: string; // ISO 8601
+  updatedAt: string; // ISO 8601
+}
+
+// Agent Task
+interface AgentTask {
+  PK: string; // AGENT_TASK#<taskId>
+  SK: string; // AGENT_TASK#<taskId>
+  GSI2PK: string; // AGENT_TASKS
+  GSI2SK: string; // <status>#<createdAt>
+  EntityType: 'AGENT_TASK';
+  id: string;
+  agentId?: string;
+  type: 'query_calendar' | 'parse_events' | 'classify_event' | 'fetch_weather';
+  priority: 'high' | 'medium' | 'low';
+  payload: any;
+  sourceId?: string;
+  status: 'pending' | 'assigned' | 'in_progress' | 'completed' | 'failed';
+  retryCount: number;
+  maxRetries: number;
+  createdAt: string; // ISO 8601
+  assignedAt?: string; // ISO 8601
+  completedAt?: string; // ISO 8601
+  errorMessage?: string;
+  TTL?: number; // Auto-delete completed tasks after 7 days
+}
+
+// Weather Data
+interface WeatherData {
+  PK: string; // FAMILY#<familyId>
+  SK: string; // WEATHER#<YYYY-MM-DD>
+  EntityType: 'WEATHER';
+  date: string; // YYYY-MM-DD
+  familyId: string;
+  location: string;
+  temperature: number;
+  temperatureUnit: 'C' | 'F';
+  aqi: number;
+  uvIndex: number;
+  precipitationChance: number; // 0-100
+  conditions: string; // e.g., "Sunny", "Rainy"
+  retrievedAt: string; // ISO 8601
+  TTL: number; // Auto-delete after 30 days
+}
+
+// Activity Threshold
+interface ActivityThreshold {
+  PK: string; // FAMILY#<familyId>
+  SK: string; // THRESHOLD#<category>
+  EntityType: 'THRESHOLD';
+  familyId: string;
+  category: string;
+  maxHours?: number;
+  minHours?: number;
+  notificationRecipients: string[]; // Array of member IDs
+  enabled: boolean;
+  createdAt: string; // ISO 8601
+  updatedAt: string; // ISO 8601
+}
+
+// Notification
+interface Notification {
+  PK: string; // USER#<userId>
+  SK: string; // NOTIFICATION#<timestamp>#<notificationId>
+  EntityType: 'NOTIFICATION';
+  id: string;
+  familyId: string;
+  recipientId: string;
+  type: 'threshold_alert' | 'weekly_summary' | 'event_update' | 'conflict_alert';
+  subject: string;
+  content: string;
+  htmlContent?: string;
+  channels: ('email' | 'in_app' | 'push')[];
+  status: 'pending' | 'sent' | 'failed';
+  createdAt: string; // ISO 8601
+  sentAt?: string; // ISO 8601
+  failureReason?: string;
+  TTL?: number; // Auto-delete after 90 days
+}
+
+// Extracurricular Activity
+interface ExtracurricularActivity {
+  PK: string; // FAMILY#<familyId>
+  SK: string; // EXTRACURRICULAR#<activityId>
+  EntityType: 'EXTRACURRICULAR';
+  id: string;
+  familyId: string;
+  familyMemberId: string;
+  activityType: 'sports' | 'music' | 'clubs' | 'other';
+  name: string;
+  schedule: string; // e.g., "Every Monday 4-5 PM"
+  location: string;
+  createdAt: string; // ISO 8601
+  updatedAt: string; // ISO 8601
+}
+
+// Audit Log
+interface AuditLogEntry {
+  PK: string; // FAMILY#<familyId>
+  SK: string; // AUDIT#<timestamp>#<logId>
+  EntityType: 'AUDIT_LOG';
+  id: string;
+  familyId: string;
+  entityType: 'event' | 'calendar_source' | 'user' | 'threshold' | 'agent' | 'agent_task';
+  entityId: string;
+  action: 'created' | 'updated' | 'deleted';
+  changedBy: string;
+  timestamp: string; // ISO 8601
+  previousValues?: Record<string, any>;
+  newValues?: Record<string, any>;
+  TTL?: number; // Auto-delete after 1 year
 }
 
 // Family Member
@@ -493,6 +914,47 @@ interface FamilyMember {
   role: 'admin' | 'member';
   joinedAt: Date;
   status: 'active' | 'inactive' | 'removed';
+}
+
+// Agent
+interface Agent {
+  id: string;
+  type: 'calendar_query' | 'event_parser' | 'event_classifier';
+  name: string;
+  capabilities: string[];
+  status: 'idle' | 'busy' | 'failed' | 'offline';
+  lastHealthCheck: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Agent Task
+interface AgentTask {
+  id: string;
+  agentId?: string;
+  type: 'query_calendar' | 'parse_events' | 'classify_event';
+  priority: 'high' | 'medium' | 'low';
+  payload: any;
+  sourceId?: string;
+  status: 'pending' | 'assigned' | 'in_progress' | 'completed' | 'failed';
+  retryCount: number;
+  maxRetries: number;
+  createdAt: Date;
+  assignedAt?: Date;
+  completedAt?: Date;
+  errorMessage?: string;
+}
+
+// Agent Result
+interface AgentResult {
+  id: string;
+  taskId: string;
+  agentId: string;
+  status: 'success' | 'partial_success' | 'failed';
+  data: any;
+  errors?: string[];
+  executionTime: number;
+  completedAt: Date;
 }
 
 // Event (Consolidated)
@@ -514,6 +976,8 @@ interface Event {
   updatedAt: Date;
   createdBy: string;
   isDeleted: boolean;
+  classifiedByAgentId?: string;
+  classificationConfidence?: number;
 }
 
 // Activity Category
@@ -534,6 +998,7 @@ interface CalendarSource {
   lastSyncTime: Date;
   syncStatus: 'active' | 'failed' | 'disconnected';
   retryCount: number;
+  assignedAgentId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -582,7 +1047,7 @@ interface NotificationPreference {
 interface AuditLogEntry {
   id: string;
   familyId: string;
-  entityType: 'event' | 'calendar_source' | 'user' | 'threshold';
+  entityType: 'event' | 'calendar_source' | 'user' | 'threshold' | 'agent' | 'agent_task';
   entityId: string;
   action: 'created' | 'updated' | 'deleted';
   changedBy: string;
@@ -604,158 +1069,121 @@ interface BackupRecord {
 }
 ```
 
-### Database Schema (PostgreSQL)
+### DynamoDB Table Configuration
 
-```sql
--- Families
-CREATE TABLE families (
-  id UUID PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+**Table Name**: `FamilyCalendar`
 
--- Family Members
-CREATE TABLE family_members (
-  id UUID PRIMARY KEY,
-  family_id UUID NOT NULL REFERENCES families(id),
-  email VARCHAR(255) NOT NULL UNIQUE,
-  name VARCHAR(255) NOT NULL,
-  password_hash VARCHAR(255) NOT NULL,
-  role VARCHAR(50) NOT NULL,
-  joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  status VARCHAR(50) DEFAULT 'active',
-  last_login_at TIMESTAMP
-);
+**Billing Mode**: On-Demand (auto-scaling)
 
--- Calendar Sources
-CREATE TABLE calendar_sources (
-  id UUID PRIMARY KEY,
-  family_member_id UUID NOT NULL REFERENCES family_members(id),
-  type VARCHAR(50) NOT NULL,
-  credentials_encrypted TEXT NOT NULL,
-  last_sync_time TIMESTAMP,
-  sync_status VARCHAR(50) DEFAULT 'active',
-  retry_count INT DEFAULT 0,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+**Primary Key**:
+- **PK** (Partition Key): String
+- **SK** (Sort Key): String
 
--- Events
-CREATE TABLE events (
-  id UUID PRIMARY KEY,
-  family_id UUID NOT NULL REFERENCES families(id),
-  family_member_id UUID NOT NULL REFERENCES family_members(id),
-  title VARCHAR(255) NOT NULL,
-  description TEXT,
-  start_time TIMESTAMP NOT NULL,
-  end_time TIMESTAMP NOT NULL,
-  location VARCHAR(255),
-  category VARCHAR(50) NOT NULL,
-  source VARCHAR(50) NOT NULL,
-  external_id VARCHAR(255),
-  source_id UUID REFERENCES calendar_sources(id),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  created_by UUID NOT NULL REFERENCES family_members(id),
-  is_deleted BOOLEAN DEFAULT FALSE,
-  INDEX idx_family_id (family_id),
-  INDEX idx_family_member_id (family_member_id),
-  INDEX idx_start_time (start_time),
-  INDEX idx_end_time (end_time)
-);
+**Global Secondary Indexes**:
 
--- Activity Thresholds
-CREATE TABLE activity_thresholds (
-  id UUID PRIMARY KEY,
-  family_id UUID NOT NULL REFERENCES families(id),
-  category VARCHAR(50) NOT NULL,
-  max_hours DECIMAL(5,2),
-  min_hours DECIMAL(5,2),
-  notification_recipients TEXT NOT NULL, -- JSON array of family member IDs
-  enabled BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+1. **GSI1** - Date Range Queries
+   - **GSI1PK** (Partition Key): String
+   - **GSI1SK** (Sort Key): String
+   - Projection: ALL
+   - Purpose: Query events by date range
 
--- Notifications
-CREATE TABLE notifications (
-  id UUID PRIMARY KEY,
-  family_id UUID NOT NULL REFERENCES families(id),
-  recipient_id UUID NOT NULL REFERENCES family_members(id),
-  type VARCHAR(50) NOT NULL,
-  subject VARCHAR(255) NOT NULL,
-  content TEXT NOT NULL,
-  html_content TEXT,
-  channels TEXT NOT NULL, -- JSON array
-  status VARCHAR(50) DEFAULT 'pending',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  sent_at TIMESTAMP,
-  failure_reason TEXT,
-  INDEX idx_recipient_id (recipient_id),
-  INDEX idx_status (status)
-);
+2. **GSI2** - Status/Type Queries
+   - **GSI2PK** (Partition Key): String
+   - **GSI2SK** (Sort Key): String
+   - Projection: ALL
+   - Purpose: Query agent tasks by status, query notifications by type
 
--- Notification Preferences
-CREATE TABLE notification_preferences (
-  id UUID PRIMARY KEY,
-  family_member_id UUID NOT NULL REFERENCES family_members(id),
-  category VARCHAR(50) NOT NULL,
-  disable_threshold_alerts BOOLEAN DEFAULT FALSE,
-  disable_summary_emails BOOLEAN DEFAULT FALSE,
-  preferred_channels TEXT NOT NULL, -- JSON array
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+**Table Features**:
+- **Encryption**: Enabled (AWS managed keys)
+- **Point-in-Time Recovery (PITR)**: Enabled (continuous backup)
+- **TTL Attribute**: `TTL` (Unix timestamp for auto-expiring items)
+- **DynamoDB Streams**: Enabled (for audit logging and real-time updates)
+- **Stream View Type**: NEW_AND_OLD_IMAGES
 
--- Audit Log
-CREATE TABLE audit_logs (
-  id UUID PRIMARY KEY,
-  family_id UUID NOT NULL REFERENCES families(id),
-  entity_type VARCHAR(50) NOT NULL,
-  entity_id VARCHAR(255) NOT NULL,
-  action VARCHAR(50) NOT NULL,
-  changed_by UUID NOT NULL REFERENCES family_members(id),
-  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  previous_values JSONB,
-  new_values JSONB,
-  INDEX idx_family_id (family_id),
-  INDEX idx_timestamp (timestamp)
-);
+**TTL Configuration**:
+- Sessions: 30 days from creation
+- Agent Tasks: 7 days after completion
+- Weather Data: 30 days from retrieval
+- Notifications: 90 days from creation
+- Audit Logs: 1 year from creation
 
--- Backup Records
-CREATE TABLE backup_records (
-  id UUID PRIMARY KEY,
-  start_time TIMESTAMP NOT NULL,
-  end_time TIMESTAMP NOT NULL,
-  status VARCHAR(50) NOT NULL,
-  backup_size BIGINT NOT NULL,
-  verification_status VARCHAR(50) NOT NULL,
-  retention_until TIMESTAMP NOT NULL,
-  error_message TEXT
-);
+**CloudFormation/CDK Configuration**:
 
--- Sessions
-CREATE TABLE sessions (
-  id UUID PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES family_members(id),
-  token VARCHAR(255) NOT NULL UNIQUE,
-  expires_at TIMESTAMP NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  last_activity_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_token (token),
-  INDEX idx_expires_at (expires_at)
-);
+```typescript
+const table = new dynamodb.Table(this, 'FamilyCalendar', {
+  tableName: 'FamilyCalendar',
+  partitionKey: { name: 'PK', type: dynamodb.AttributeType.STRING },
+  sortKey: { name: 'SK', type: dynamodb.AttributeType.STRING },
+  billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+  encryption: dynamodb.TableEncryption.AWS_MANAGED,
+  pointInTimeRecovery: true,
+  timeToLiveAttribute: 'TTL',
+  stream: dynamodb.StreamViewType.NEW_AND_OLD_IMAGES,
+});
+
+// GSI1 for date range queries
+table.addGlobalSecondaryIndex({
+  indexName: 'GSI1',
+  partitionKey: { name: 'GSI1PK', type: dynamodb.AttributeType.STRING },
+  sortKey: { name: 'GSI1SK', type: dynamodb.AttributeType.STRING },
+  projectionType: dynamodb.ProjectionType.ALL,
+});
+
+// GSI2 for status/type queries
+table.addGlobalSecondaryIndex({
+  indexName: 'GSI2',
+  partitionKey: { name: 'GSI2PK', type: dynamodb.AttributeType.STRING },
+  sortKey: { name: 'GSI2SK', type: dynamodb.AttributeType.STRING },
+  projectionType: dynamodb.ProjectionType.ALL,
+});
 ```
+
+**Access Patterns Summary**:
+
+| Pattern | Description | Key Structure | Index |
+|---------|-------------|---------------|-------|
+| 1 | Get family by ID | PK: FAMILY#id, SK: FAMILY#id | Primary |
+| 2 | Get family members | PK: FAMILY#id, SK: MEMBER#id | Primary |
+| 3 | Get events for family | PK: FAMILY#id, SK: EVENT#id | Primary |
+| 4 | Get events by date | GSI1PK: FAMILY#id#EVENTS, GSI1SK: YYYY-MM-DD#id | GSI1 |
+| 5 | Get user sessions | PK: USER#id, SK: SESSION#token | Primary |
+| 6 | Get agent tasks by status | GSI2PK: AGENT_TASKS, GSI2SK: status#createdAt | GSI2 |
+| 7 | Get weather by date | PK: FAMILY#id, SK: WEATHER#YYYY-MM-DD | Primary |
+| 8 | Get thresholds | PK: FAMILY#id, SK: THRESHOLD#category | Primary |
+| 9 | Get user notifications | PK: USER#id, SK: NOTIFICATION#timestamp#id | Primary |
+| 10 | Get agent by ID | PK: AGENT#id, SK: AGENT#id | Primary |
 
 ## Key Algorithms
 
-### 1. Event Synchronization Algorithm
+### 1. Agent-Based Event Synchronization Algorithm
 
 ```
-ALGORITHM SyncCalendarSources()
+ALGORITHM AgentBasedSyncCalendarSources()
+  // Step 1: Create agent tasks for each calendar source
   FOR EACH active calendar source:
-    TRY
-      externalEvents = FetchEventsFromSource(source, lastSyncTime)
+    task = CreateAgentTask(
+      type: 'query_calendar',
+      priority: 'high',
+      payload: {
+        sourceId: source.id,
+        sourceType: source.type,
+        startDate: source.lastSyncTime,
+        endDate: NOW()
+      }
+    )
+    QueueTask(task)
+  END FOR
+  
+  // Step 2: Agent orchestrator assigns tasks to available agents
+  AgentOrchestrator.AssignTasks()
+  
+  // Step 3: Wait for agent results
+  results = AgentOrchestrator.WaitForResults(timeout: 5 minutes)
+  
+  // Step 4: Process results from each agent
+  FOR EACH result IN results:
+    IF result.status == 'success':
+      externalEvents = result.data.events
       
       FOR EACH externalEvent:
         existingEvent = FindEventByExternalId(externalEvent.externalId)
@@ -766,13 +1194,21 @@ ALGORITHM SyncCalendarSources()
           END IF
         ELSE:
           newEvent = CreateEventFromExternal(externalEvent)
-          ClassifyEvent(newEvent)
+          
+          // Create classification task for event classifier agent
+          classifyTask = CreateAgentTask(
+            type: 'classify_event',
+            priority: 'medium',
+            payload: { event: newEvent }
+          )
+          QueueTask(classifyTask)
+          
           StoreEvent(newEvent)
         END IF
       END FOR
       
       // Detect deleted events
-      FOR EACH storedEvent WHERE source = source:
+      FOR EACH storedEvent WHERE source = result.sourceId:
         IF NOT ExistsInExternalEvents(storedEvent):
           MarkEventAsDeleted(storedEvent)
         END IF
@@ -782,43 +1218,143 @@ ALGORITHM SyncCalendarSources()
       source.syncStatus = 'active'
       source.retryCount = 0
       
-    CATCH error:
+    ELSE IF result.status == 'failed':
       source.retryCount += 1
       IF source.retryCount < MAX_RETRIES:
-        QueueRetry(source, RETRY_DELAY)
+        QueueRetryTask(source, RETRY_DELAY)
       ELSE:
         source.syncStatus = 'failed'
-        AlertAdministrators(source, error)
+        AlertAdministrators(source, result.errors)
       END IF
-    END TRY
-  END FOR
-END ALGORITHM
-```
-
-### 2. Event Classification Algorithm
-
-```
-ALGORITHM ClassifyEvent(event)
-  // Step 1: Keyword matching
-  FOR EACH category:
-    matchScore = CalculateKeywordMatchScore(event.title, event.description, category.keywords)
-    IF matchScore > CONFIDENCE_THRESHOLD:
-      RETURN ClassificationResult(category, matchScore, false)
     END IF
   END FOR
   
-  // Step 2: ML-based classification
-  mlPrediction = MLClassifier.Predict(event)
-  IF mlPrediction.confidence > CONFIDENCE_THRESHOLD:
-    RETURN ClassificationResult(mlPrediction.category, mlPrediction.confidence, false)
-  END IF
-  
-  // Step 3: User input required
-  RETURN ClassificationResult(null, 0, true, mlPrediction.alternatives)
+  // Step 5: Process classification results
+  AgentOrchestrator.ProcessClassificationResults()
 END ALGORITHM
 ```
 
-### 3. Threshold Violation Detection Algorithm
+### 2. AI Agent-Based Event Classification Algorithm
+
+```
+ALGORITHM AIAgentClassifyEvent(event)
+  // Step 1: Create classification task
+  task = CreateAgentTask(
+    type: 'classify_event',
+    priority: 'medium',
+    payload: {
+      eventId: event.id,
+      title: event.title,
+      description: event.description,
+      startTime: event.startTime,
+      endTime: event.endTime,
+      location: event.location
+    }
+  )
+  
+  // Step 2: Assign to event classifier agent
+  agent = AgentOrchestrator.GetAvailableAgent('event_classifier')
+  result = agent.Execute(task)
+  
+  // Step 3: Process classification result
+  IF result.status == 'success':
+    classification = result.data
+    
+    IF classification.confidence > CONFIDENCE_THRESHOLD:
+      event.category = classification.category
+      event.classifiedByAgentId = agent.id
+      event.classificationConfidence = classification.confidence
+      RETURN ClassificationResult(
+        category: classification.category,
+        confidence: classification.confidence,
+        requiresUserInput: false,
+        reasoning: classification.reasoning
+      )
+    ELSE:
+      // Low confidence - request user input
+      RETURN ClassificationResult(
+        category: null,
+        confidence: classification.confidence,
+        requiresUserInput: true,
+        suggestedAlternatives: classification.alternatives,
+        reasoning: classification.reasoning
+      )
+    END IF
+  ELSE:
+    // Agent failed - fallback to keyword matching
+    RETURN FallbackKeywordClassification(event)
+  END IF
+END ALGORITHM
+```
+
+### 3. Agent Task Orchestration Algorithm
+
+```
+ALGORITHM OrchestrateTasks()
+  WHILE system is running:
+    // Step 1: Get pending tasks from queue
+    pendingTasks = GetPendingTasks(limit: 100)
+    
+    // Step 2: Get available agents
+    availableAgents = GetAvailableAgents()
+    
+    // Step 3: Match tasks to agents based on capabilities
+    FOR EACH task IN pendingTasks:
+      suitableAgents = FilterAgentsByCapability(availableAgents, task.type)
+      
+      IF suitableAgents.length > 0:
+        // Select agent with lowest current load
+        agent = SelectLeastLoadedAgent(suitableAgents)
+        
+        // Assign task to agent
+        task.agentId = agent.id
+        task.status = 'assigned'
+        task.assignedAt = NOW()
+        
+        // Execute task asynchronously
+        ExecuteTaskAsync(agent, task)
+        
+        // Mark agent as busy
+        agent.status = 'busy'
+      ELSE:
+        // No suitable agent available - keep task in queue
+        CONTINUE
+      END IF
+    END FOR
+    
+    // Step 4: Check for completed tasks
+    completedTasks = GetCompletedTasks()
+    FOR EACH task IN completedTasks:
+      agent = GetAgentById(task.agentId)
+      agent.status = 'idle'
+      
+      // Process task result
+      ProcessTaskResult(task)
+    END FOR
+    
+    // Step 5: Check for failed tasks and retry
+    failedTasks = GetFailedTasks()
+    FOR EACH task IN failedTasks:
+      IF task.retryCount < task.maxRetries:
+        task.retryCount += 1
+        task.status = 'pending'
+        task.agentId = null
+        QueueTask(task)
+      ELSE:
+        LogTaskFailure(task)
+        AlertAdministrators(task)
+      END IF
+    END FOR
+    
+    // Step 6: Health check agents
+    PerformAgentHealthChecks()
+    
+    SLEEP(1 second)
+  END WHILE
+END ALGORITHM
+```
+
+### 4. Threshold Violation Detection Algorithm
 
 ```
 ALGORITHM DetectThresholdViolations(weekStartDate, weekEndDate)
@@ -867,7 +1403,7 @@ ALGORITHM DetectThresholdViolations(weekStartDate, weekEndDate)
 END ALGORITHM
 ```
 
-### 4. Conflict Detection Algorithm
+### 5. Conflict Detection Algorithm
 
 ```
 ALGORITHM DetectConflicts(newEvent)
@@ -900,7 +1436,7 @@ ALGORITHM DetectConflicts(newEvent)
 END ALGORITHM
 ```
 
-### 5. Weekly Summary Generation Algorithm
+### 6. Weekly Summary Generation Algorithm
 
 ```
 ALGORITHM GenerateWeeklySummary(weekStartDate, weekEndDate)

@@ -1,0 +1,79 @@
+.onboarding-settings {
+  background-color: white;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.onboarding-settings h3 {
+  margin: 0 0 20px 0;
+  font-size: 20px;
+  color: #333;
+}
+
+.onboarding-status {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.status-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.status-item:not(:last-child) {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.status-label {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+.status-value {
+  font-size: 14px;
+  color: #333;
+}
+
+.status-value.complete {
+  color: #4CAF50;
+  font-weight: 600;
+}
+
+.status-value.incomplete {
+  color: #FF9800;
+  font-weight: 600;
+}
+
+.onboarding-actions {
+  margin-top: 20px;
+}
+
+.rerun-button {
+  padding: 12px 24px;
+  font-size: 16px;
+  border: 1px solid #2196F3;
+  border-radius: 4px;
+  background-color: #2196F3;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.rerun-button:hover {
+  background-color: #1976D2;
+  border-color: #1976D2;
+}
+
+.help-text {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #666;
+  line-height: 1.5;
+}
