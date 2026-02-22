@@ -4,7 +4,7 @@
   "description": "Backend API for Flo Family Calendar",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch src/index.ts --host 0.0.0.0",
     "build": "tsc",
     "test": "jest",
     "test:watch": "jest --watch",
