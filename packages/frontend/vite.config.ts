@@ -12,8 +12,8 @@ export default defineConfig({
         name: 'Flo - Family Calendar',
         short_name: 'Flo',
         description: 'AI-powered family calendar with time tracking and offline support',
-        theme_color: '#4F46E5',
-        background_color: '#ffffff',
+        theme_color: '#6C63FF',
+        background_color: '#1a1a2e',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',
@@ -84,6 +84,27 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
+  },
+  build: {
+    target: 'esnext',
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+      },
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor': ['react', 'react-dom', 'react-router-dom'],
+          'aws': ['aws-amplify', '@aws-amplify/ui-react'],
+          'landing': ['./src/pages/LandingPage.tsx'],
+          'auth': ['./src/pages/LoginPage.tsx'],
+          'dashboard': ['./src/components/TimeTrackingDashboard.tsx'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
   },
   test: {
     globals: true,

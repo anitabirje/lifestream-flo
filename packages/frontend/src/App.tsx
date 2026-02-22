@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './services/auth-context';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { LandingPage } from './pages/LandingPage';
+import { LoginPage } from './pages/LoginPage';
 import WeeklyCalendarGrid from './components/WeeklyCalendarGrid';
 import EventDetailModal from './components/EventDetailModal';
 import { TimeTrackingDashboard } from './components/TimeTrackingDashboard';
-import { Navigation } from './components/Navigation';
 import { Event, FamilyMember } from './types/calendar';
 import './App.css';
 
@@ -52,10 +56,10 @@ const MOCK_EVENTS: Event[] = [
   },
 ];
 
-function App() {
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState<'calendar' | 'dashboard'>('calendar');
+const AppDashboard: React.FC = () => {
+  const [selectedEvent, setSelectedEvent] = React.useState<Event | null>(null);
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [currentPage, setCurrentPage] = React.useState<'calendar' | 'dashboard'>('calendar');
 
   const handleEventClick = (event: Event) => {
     setSelectedEvent(event);
@@ -69,8 +73,6 @@ function App() {
 
   return (
     <div className="app">
-      <Navigation currentPage={currentPage} onNavigate={setCurrentPage} />
-      
       <header className="app-header">
         <h1>Flo - Family Calendar</h1>
         <p>AI-powered family calendar with time tracking</p>
@@ -95,6 +97,28 @@ function App() {
         )}
       </main>
     </div>
+  );
+};
+
+function App() {
+  return (
+    <Router>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/app"
+            element={
+              <ProtectedRoute>
+                <AppDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
+    </Router>
   );
 }
 
