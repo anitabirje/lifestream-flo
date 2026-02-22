@@ -97,3 +97,18 @@ export interface IAgent {
    */
   healthCheck(): Promise<boolean>;
 }
+
+/**
+ * Weather data structure
+ */
+export interface WeatherData {
+  date: string; // YYYY-MM-DD format
+  location: string;
+  temperature: number;
+  temperatureUnit: 'C' | 'F';
+  aqi: number; // Air Quality Index (0-500)
+  uvIndex: number;
+  precipitationChance: number; // 0-100 percentage
+  conditions: string;
+  retrievedAt: Date;
+}
