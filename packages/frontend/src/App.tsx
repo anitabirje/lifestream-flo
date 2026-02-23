@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './services/auth-context';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { Footer } from './components/Footer';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 import WeeklyCalendarGrid from './components/WeeklyCalendarGrid';
@@ -90,6 +91,8 @@ const AppDashboard: React.FC = () => {
             />
         </>
       </main>
+
+      <Footer />
     </div>
   );
 };

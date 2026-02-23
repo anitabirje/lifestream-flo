@@ -3,7 +3,6 @@ import { Navigation } from '../components/Navigation';
 import { HeroSection } from '../components/HeroSection';
 import { FeaturesGrid } from '../components/FeaturesGrid';
 import { HowItWorks } from '../components/HowItWorks';
-import { Testimonials } from '../components/Testimonials';
 import { CTASection } from '../components/CTASection';
 import { Footer } from '../components/Footer';
 
@@ -30,7 +29,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       />
       <FeaturesGrid />
       <HowItWorks />
-      <Testimonials />
       <CTASection onGetStartedClick={onSignUpClick} />
       <Footer />
     </main>

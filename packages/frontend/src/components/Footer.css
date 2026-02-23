@@ -27,10 +27,23 @@
   flex-shrink: 0;
 }
 
+.footer-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
 .footer-copyright {
   font-size: var(--font-size-body-small);
   color: var(--color-muted);
   margin: 0;
+}
+
+.footer-hackathon {
+  font-size: var(--font-size-body-small);
+  color: var(--color-muted);
+  margin: 0;
+  font-weight: var(--font-weight-semibold);
 }
 
 .footer-aws {

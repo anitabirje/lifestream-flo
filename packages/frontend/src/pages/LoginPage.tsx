@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../services/auth-context';
+import { Footer } from '../components/Footer';
 import './LoginPage.css';
 
 export const LoginPage: React.FC = () => {
@@ -277,6 +278,8 @@ export const LoginPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 };

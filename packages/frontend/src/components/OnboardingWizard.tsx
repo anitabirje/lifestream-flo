@@ -4,6 +4,7 @@ import { CalendarSourcesStep } from './CalendarSourcesStep';
 import { SourceConnectionStep } from './SourceConnectionStep';
 import { CategoryTrackingStep } from './CategoryTrackingStep';
 import { TimeAllocationStep } from './TimeAllocationStep';
+import { Footer } from './Footer';
 import { onboardingApi } from '../api/onboardingApi';
 
 export type OnboardingStep = 
@@ -237,6 +238,8 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
           />
         )}
       </div>
+
+      <Footer />
     </div>
   );
 };
