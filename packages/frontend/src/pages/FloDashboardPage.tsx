@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './FloDashboardPage.css';
 
 export const FloDashboardPage: React.FC = () => {
+  const navigate = useNavigate();
   useEffect(() => {
     // Animate bars on load
     const bars = document.querySelectorAll('.bar');
@@ -23,13 +25,20 @@ export const FloDashboardPage: React.FC = () => {
     alert('Week navigation: ' + action);
   };
 
+  const handleHomeClick = () => {
+    navigate('/');
+  };
+
   return (
     <div className="flo-dashboard-container">
       {/* Header */}
       <div className="flo-header">
-        <div>
-          <h1>🌸 Flo Family Calendar</h1>
-          <p style={{ opacity: 0.9, marginTop: '5px' }}>Your family's time, beautifully organized</p>
+        <div className="header-left">
+         
+          <div>
+            <h1 onClick={handleHomeClick}> 🌸 <span className="nav-link-gradient-text" onClick={handleHomeClick}>Flo</span> Family Calendar</h1>
+            <p style={{ opacity: 0.9, marginTop: '5px' }}>Your family's time, beautifully organized</p>
+          </div>
         </div>
         <div className="header-info">
           <div className="date">Week of Feb 23 - Mar 1, 2026</div>
