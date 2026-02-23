@@ -41,16 +41,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
           <div className="hero-stats">
             <div className="stat">
-              <div className="stat-number">10K+</div>
-              <div className="stat-label">Families</div>
+              <div className="stat-number">10</div>
+              <div className="stat-label">Specialized AI Agents</div>
             </div>
             <div className="stat">
-              <div className="stat-number">50K+</div>
-              <div className="stat-label">Events Tracked</div>
+              <div className="stat-number">7</div>
+              <div className="stat-label">AWS Services</div>
             </div>
             <div className="stat">
-              <div className="stat-number">99.9%</div>
-              <div className="stat-label">Uptime</div>
+              <div className="stat-number">∞</div>
+              <div className="stat-label">Streams of Life Connected</div>
             </div>
           </div>
         </div>
