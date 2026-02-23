@@ -10,7 +10,7 @@ from matplotlib.patches import FancyBboxPatch, FancyArrowPatch, Rectangle
 import os
 
 # Ensure output directory exists
-os.makedirs('generated-diagrams', exist_ok=True)
+os.makedirs('generated-diagrams-v2', exist_ok=True)
 
 # Color scheme
 COLOR_CLIENT = '#E8F4F8'
@@ -134,4 +134,4 @@ y_pos = 14
 ax.text(2, y_pos, 'AWS SERVICES LAYER', fontsize=11, fontweight='bold',
         bbox=dict(boxstyle='round', facecolor='#B2DFDB', alpha=0.7))
 
-draw_box(ax, 6, y_pos-6, 14, 5, 'DynamoDB\n• Data Persistence\n')
+draw_box(ax, 6, y_pos-6, 14, 5, 'DynamoDB\n• Data Persistence\n', COLOR_DATA, 9)
