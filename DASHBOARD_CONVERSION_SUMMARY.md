@@ -6,13 +6,13 @@ Successfully converted the HTML mockup (`flo-dashboard-with-consolidated-calenda
 
 ## Files Created
 
-1. **packages/frontend/src/pages/FloDashboardPage.tsx**
+1. **packages/frontend/src/pages/FloConsolidatedCalendar.tsx**
    - Full React component with TypeScript
    - Interactive event handlers
    - Animated bar chart on component mount
    - Click handlers for all events and navigation buttons
 
-2. **packages/frontend/src/pages/FloDashboardPage.css**
+2. **packages/frontend/src/pages/FloConsolidatedCalendar.css**
    - Complete styling extracted from HTML
    - Responsive design (mobile, tablet, desktop)
    - Gradient backgrounds and animations
@@ -26,8 +26,8 @@ Successfully converted the HTML mockup (`flo-dashboard-with-consolidated-calenda
    - Updated interface to include new handler
 
 2. **packages/frontend/src/App.tsx**
-   - Imported `FloDashboardPage` component
-   - Added `/dashboard` route
+   - Imported `FloConsolidatedCalendar` component
+   - Added `/consolidated-calendar-with-dashboard` route
    - Route is publicly accessible (no authentication required)
 
 3. **packages/frontend/src/pages/LandingPage.tsx**

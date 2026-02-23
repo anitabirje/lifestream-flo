@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './FloDashboardPage.css';
+import './FloConsolidatedCalendar.css';
 
-export const FloDashboardPage: React.FC = () => {
+export const FloConsolidatedCalendarPage: React.FC = () => {
   const navigate = useNavigate();
   useEffect(() => {
     // Animate bars on load

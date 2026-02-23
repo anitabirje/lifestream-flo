@@ -13,19 +13,23 @@ interface LandingPageProps {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
-  onLoginClick,
+  // onLoginClick,
   onSignUpClick,
 }) => {
   const navigate = useNavigate();
 
+  const handleLoginClick = () => {
+    navigate('/login');
+  };
+
   const handleDashboardClick = () => {
-    navigate('/dashboard');
+    navigate('/consolidated-calendar-with-dashboard');
   };
 
   return (
     <main>
       <Navigation 
-        onLoginClick={handleDashboardClick} 
+        onLoginClick={handleLoginClick} 
         onSignUpClick={onSignUpClick}
         onDashboardClick={handleDashboardClick}
       />

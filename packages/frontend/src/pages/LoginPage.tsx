@@ -6,7 +6,7 @@ import './LoginPage.css';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { login, signup, error, isLoading, clearError } = useAuth();
+  const { /* login, */ signup, error, isLoading, clearError } = useAuth();
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -40,11 +40,13 @@ export const LoginPage: React.FC = () => {
     }
 
     try {
-      await login(email, password);
+      // await login(email, password);
+      //  navigate('/dashboard');
       if (rememberMe) {
         localStorage.setItem('rememberMe', 'true');
       }
-      navigate('/onboarding');
+      // navigate('/onboarding');
+       navigate('/consolidated-calendar-with-dashboard');
     } catch (err) {
       setFormError(error || 'Login failed');
     }
