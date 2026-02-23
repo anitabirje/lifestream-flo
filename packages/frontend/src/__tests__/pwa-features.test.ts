@@ -8,7 +8,7 @@ import * as fc from 'fast-check';
 import { CalendarCacheService, type CachedEvent } from '../services/calendar-cache';
 import { OfflineSyncService, type PendingChange } from '../services/offline-sync';
 import { NotificationPermissionService } from '../services/notification-permission';
-import { NotificationPreferencesService, type NotificationPreferences } from '../services/notification-preferences';
+import { NotificationPreferencesService } from '../services/notification-preferences';
 
 describe('PWA Features - Property-Based Tests', () => {
   beforeEach(() => {

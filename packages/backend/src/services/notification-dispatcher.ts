@@ -1,10 +1,12 @@
 /**
  * Notification Dispatcher Service
- * Sends notifications via email and in-app channels
+ * Sends notifications via email, push, and in-app channels
  * Queues notifications for async delivery
  */
 
 import { DynamoDBDataAccess } from '../data-access/dynamodb-client';
+import { EmailNotificationService, EmailPayload } from './email-notification-service';
+import { PushNotificationService, PushNotificationPayload } from './push-notification-service';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface NotificationPayload {
@@ -14,7 +16,7 @@ export interface NotificationPayload {
   subject: string;
   content: string;
   htmlContent?: string;
-  channels: ('email' | 'in_app')[];
+  channels: ('email' | 'push' | 'in_app')[];
 }
 
 export interface DispatchResult {
@@ -22,6 +24,7 @@ export interface DispatchResult {
   status: 'queued' | 'sent' | 'failed';
   channels: {
     email?: { status: 'queued' | 'sent' | 'failed'; error?: string };
+    push?: { status: 'queued' | 'sent' | 'failed'; error?: string };
     in_app?: { status: 'queued' | 'sent' | 'failed'; error?: string };
   };
   createdAt: Date;
@@ -39,7 +42,7 @@ export interface NotificationEntity {
   subject: string;
   content: string;
   htmlContent?: string;
-  channels: ('email' | 'in_app')[];
+  channels: ('email' | 'push' | 'in_app')[];
   status: 'pending' | 'sent' | 'failed';
   createdAt: string;
   sentAt?: string;
@@ -48,7 +51,27 @@ export interface NotificationEntity {
 }
 
 export class NotificationDispatcher {
-  constructor(private dataAccess: DynamoDBDataAccess) {}
+  private emailService?: EmailNotificationService;
+  private pushService?: PushNotificationService;
+
+  constructor(private dataAccess: DynamoDBDataAccess, emailService?: EmailNotificationService, pushService?: PushNotificationService) {
+    this.emailService = emailService;
+    this.pushService = pushService;
+  }
+
+  /**
+   * Set email service (for dependency injection)
+   */
+  setEmailService(emailService: EmailNotificationService): void {
+    this.emailService = emailService;
+  }
+
+  /**
+   * Set push service (for dependency injection)
+   */
+  setPushService(pushService: PushNotificationService): void {
+    this.pushService = pushService;
+  }
 
   /**
    * Queue a notification for delivery
@@ -75,7 +98,7 @@ export class NotificationDispatcher {
     };
 
     // Store in DynamoDB
-    await this.dataAccess.putItem(entity);
+    await this.dataAccess.putItem(entity as any);
 
     return {
       notificationId,
@@ -90,25 +113,86 @@ export class NotificationDispatcher {
 
   /**
    * Send notification via email
-   * In production, this would integrate with SendGrid or similar service
+   * Integrates with SendGrid for reliable email delivery
    */
   async sendEmailNotification(
     recipientEmail: string,
     subject: string,
     htmlContent: string,
     plainText: string
-  ): Promise<{ success: boolean; error?: string }> {
+  ): Promise<{ success: boolean; error?: string; messageId?: string }> {
     try {
-      // TODO: Integrate with SendGrid or similar email service
-      // For now, just log the notification
-      console.log(`[EMAIL] To: ${recipientEmail}`);
-      console.log(`[EMAIL] Subject: ${subject}`);
-      console.log(`[EMAIL] Content: ${plainText.substring(0, 100)}...`);
+      // If no email service is configured, log and return success
+      if (!this.emailService) {
+        console.log(`[EMAIL] To: ${recipientEmail}`);
+        console.log(`[EMAIL] Subject: ${subject}`);
+        console.log(`[EMAIL] Content: ${plainText.substring(0, 100)}...`);
+        console.warn('[EMAIL] Warning: Email service not configured. Email not sent.');
+        return { success: true };
+      }
 
-      // Simulate successful send
-      return { success: true };
+      const payload: EmailPayload = {
+        to: recipientEmail,
+        subject,
+        plainText,
+        htmlContent,
+      };
+
+      const result = await this.emailService.sendEmail(payload);
+
+      if (result.success) {
+        console.log(`[EMAIL] Successfully sent to ${recipientEmail} (Message ID: ${result.messageId})`);
+        return { success: true, messageId: result.messageId };
+      } else {
+        console.error(`[EMAIL] Failed to send to ${recipientEmail}: ${result.error}`);
+        return { success: false, error: result.error };
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`[EMAIL] Error sending to ${recipientEmail}: ${errorMessage}`);
+      return { success: false, error: errorMessage };
+    }
+  }
+
+  /**
+   * Send notification via push
+   */
+  async sendPushNotification(
+    recipientId: string,
+    payload: PushNotificationPayload
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      // If no push service is configured, log and return success
+      if (!this.pushService) {
+        console.log(`[PUSH] To: ${recipientId}`);
+        console.log(`[PUSH] Title: ${payload.title}`);
+        console.log(`[PUSH] Body: ${payload.body}`);
+        console.warn('[PUSH] Warning: Push service not configured. Push notification not sent.');
+        return { success: true };
+      }
+
+      // Send to all subscriptions for this user
+      const results = await this.pushService.sendToAllSubscriptions(
+        recipientId,
+        '', // familyId will be retrieved from subscription
+        payload
+      );
+
+      // Check if at least one subscription was successful
+      const anySuccess = results.some((r) => r.success);
+
+      if (anySuccess) {
+        console.log(`[PUSH] Successfully sent to ${recipientId}`);
+        return { success: true };
+      } else {
+        const errors = results.map((r) => r.error).filter(Boolean);
+        const errorMessage = errors.join('; ') || 'All push subscriptions failed';
+        console.error(`[PUSH] Failed to send to ${recipientId}: ${errorMessage}`);
+        return { success: false, error: errorMessage };
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`[PUSH] Error sending to ${recipientId}: ${errorMessage}`);
       return { success: false, error: errorMessage };
     }
   }
@@ -146,7 +230,7 @@ export class NotificationDispatcher {
     subject: string,
     htmlContent: string,
     plainText: string,
-    channels: ('email' | 'in_app')[]
+    channels: ('email' | 'push' | 'in_app')[]
   ): Promise<DispatchResult> {
     const results: DispatchResult['channels'] = {};
     let overallStatus: 'sent' | 'failed' = 'sent';
@@ -159,6 +243,27 @@ export class NotificationDispatcher {
         error: emailResult.error,
       };
       if (!emailResult.success) {
+        overallStatus = 'failed';
+      }
+    }
+
+    // Send via push if requested
+    if (channels.includes('push')) {
+      const pushPayload: PushNotificationPayload = {
+        title: subject,
+        body: plainText,
+        icon: '/pwa-192x192.png',
+        badge: '/pwa-192x192.png',
+        tag: `notification-${notificationId}`,
+        requireInteraction: false,
+      };
+
+      const pushResult = await this.sendPushNotification(recipientId, pushPayload);
+      results.push = {
+        status: pushResult.success ? 'sent' : 'failed',
+        error: pushResult.error,
+      };
+      if (!pushResult.success) {
         overallStatus = 'failed';
       }
     }
@@ -216,7 +321,7 @@ export class NotificationDispatcher {
       sentAt: sentAt.toISOString(),
     };
 
-    await this.dataAccess.putItem(updated);
+    await this.dataAccess.putItem(updated as any);
   }
 
   /**
@@ -228,7 +333,7 @@ export class NotificationDispatcher {
       `NOTIFICATION#`
     );
 
-    return items.filter((item: any) => item.status === 'pending') as NotificationEntity[];
+    return items.filter((item: any) => item.status === 'pending').map((item: any) => item as NotificationEntity);
   }
 
   /**
@@ -241,7 +346,7 @@ export class NotificationDispatcher {
     );
 
     const notification = items.find((item: any) => item.id === notificationId);
-    return notification || null;
+    return (notification as NotificationEntity) || null;
   }
 
   /**
@@ -260,7 +365,7 @@ export class NotificationDispatcher {
       return timeB - timeA;
     });
 
-    return limit ? sorted.slice(0, limit) : sorted;
+    return (limit ? sorted.slice(0, limit) : sorted).map((item: any) => item as NotificationEntity);
   }
 
   /**
@@ -277,7 +382,7 @@ export class NotificationDispatcher {
       read: true,
     };
 
-    await this.dataAccess.putItem(updated);
+    await this.dataAccess.putItem(updated as any);
     return true;
   }
 

@@ -6,7 +6,6 @@ import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 import WeeklyCalendarGrid from './components/WeeklyCalendarGrid';
 import EventDetailModal from './components/EventDetailModal';
-import { TimeTrackingDashboard } from './components/TimeTrackingDashboard';
 import { Event, FamilyMember } from './types/calendar';
 import './App.css';
 
@@ -59,7 +58,6 @@ const MOCK_EVENTS: Event[] = [
 const AppDashboard: React.FC = () => {
   const [selectedEvent, setSelectedEvent] = React.useState<Event | null>(null);
   const [isModalOpen, setIsModalOpen] = React.useState(false);
-  const [currentPage, setCurrentPage] = React.useState<'calendar' | 'dashboard'>('calendar');
 
   const handleEventClick = (event: Event) => {
     setSelectedEvent(event);
@@ -79,11 +77,10 @@ const AppDashboard: React.FC = () => {
       </header>
       
       <main className="app-main">
-        {currentPage === 'calendar' ? (
-          <>
-            <WeeklyCalendarGrid
-              events={MOCK_EVENTS}
-              familyMembers={MOCK_FAMILY_MEMBERS}
+        <>
+          <WeeklyCalendarGrid
+            events={MOCK_EVENTS}
+            familyMembers={MOCK_FAMILY_MEMBERS}
               onEventClick={handleEventClick}
             />
             <EventDetailModal
@@ -91,10 +88,7 @@ const AppDashboard: React.FC = () => {
               isOpen={isModalOpen}
               onClose={handleCloseModal}
             />
-          </>
-        ) : (
-          <TimeTrackingDashboard />
-        )}
+        </>
       </main>
     </div>
   );

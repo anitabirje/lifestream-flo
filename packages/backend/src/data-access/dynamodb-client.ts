@@ -509,6 +509,10 @@ export class DynamoDBDataAccess {
 const clientWrapper = new DynamoDBClientWrapper();
 export const dynamoDBDataAccess = new DynamoDBDataAccess(clientWrapper);
 
+export function getDynamoDBClient(): DynamoDBClientWrapper {
+  return clientWrapper;
+}
+
 // Export the wrapper for direct access if needed
 export const dynamoDBClientWrapper = clientWrapper;
 

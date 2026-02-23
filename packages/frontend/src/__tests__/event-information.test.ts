@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
-import { Event, FamilyMember } from '../types/calendar';
 import { formatTime, formatDateReadable } from '../utils/dateUtils';
 
 /**

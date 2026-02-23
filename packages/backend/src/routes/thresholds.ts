@@ -5,13 +5,12 @@
 
 import { Router, Request, Response } from 'express';
 import { ThresholdService } from '../services/threshold-service';
-import { getDynamoDBClient } from '../data-access/dynamodb-client';
+import { dynamoDBDataAccess } from '../data-access/dynamodb-client';
 
 const router = Router();
 
 // Initialize service
-const dynamoClient = getDynamoDBClient();
-const thresholdService = new ThresholdService(dynamoClient);
+const thresholdService = new ThresholdService(dynamoDBDataAccess);
 
 /**
  * POST /api/thresholds

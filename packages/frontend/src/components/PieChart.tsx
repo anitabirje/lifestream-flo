@@ -14,12 +14,11 @@ export interface PieChartProps {
 
 export const PieChart: React.FC<PieChartProps> = ({ data, size = 200, title }) => {
   const radius = size / 2;
-  const circumference = 2 * Math.PI * (radius - 10);
   
   const total = data.reduce((sum, item) => sum + item.value, 0);
   
   let currentAngle = -90; // Start from top
-  const slices = data.map((item, index) => {
+  const slices = data.map((item) => {
     const percentage = total > 0 ? item.value / total : 0;
     const sliceAngle = percentage * 360;
     

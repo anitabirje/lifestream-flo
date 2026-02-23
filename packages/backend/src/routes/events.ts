@@ -9,6 +9,7 @@
 import { Router, Request, Response } from 'express';
 import { EventManagementService } from '../services/event-management-service';
 import { AuditLogger } from '../services/audit-logger';
+import { getDynamoDBClient } from '../data-access/dynamodb-client';
 import { dynamoDBDataAccess } from '../data-access/dynamodb-client';
 import { AuthService } from '../auth/auth-service';
 import { PasswordManager } from '../auth/password-manager';
@@ -18,9 +19,10 @@ import { authenticate, requirePermission } from '../middleware/access-control';
 const router = Router();
 
 // Initialize services
+const dynamoClient = getDynamoDBClient();
 const passwordManager = new PasswordManager();
-const sessionManager = new SessionManager(dynamoDBDataAccess);
-const authService = new AuthService(dynamoDBDataAccess, passwordManager, sessionManager);
+const sessionManager = new SessionManager(dynamoClient);
+const authService = new AuthService(dynamoClient, passwordManager, sessionManager);
 const auditLogger = new AuditLogger(dynamoDBDataAccess);
 
 const eventService = new EventManagementService(dynamoDBDataAccess, auditLogger);

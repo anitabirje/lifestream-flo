@@ -60,8 +60,7 @@ export async function createOrUpdateAlarm(config: AlarmConfig): Promise<void> {
     await client.send(command);
     logger.info(`Created/updated alarm: ${config.alarmName}`);
   } catch (error) {
-    logger.error('Failed to create/update alarm', {
-      error: error instanceof Error ? error.message : String(error),
+    logger.error('Failed to create/update alarm', error instanceof Error ? error : new Error(String(error)), {
       alarmName: config.alarmName,
     });
     throw error;
@@ -142,9 +141,7 @@ export async function createDefaultAlarms(): Promise<void> {
     try {
       await createOrUpdateAlarm(alarm);
     } catch (error) {
-      logger.error(`Failed to create alarm: ${alarm.alarmName}`, {
-        error: error instanceof Error ? error.message : String(error),
-      });
+      logger.error(`Failed to create alarm: ${alarm.alarmName}`, error instanceof Error ? error : new Error(String(error)));
       // Continue creating other alarms even if one fails
     }
   }

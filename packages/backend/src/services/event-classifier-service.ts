@@ -177,7 +177,7 @@ export class EventClassifierService {
       const dynamoItem = {
         PK: `FAMILY#${familyId}`,
         SK: `CATEGORY#${categoryId}`,
-        EntityType: 'ACTIVITY_CATEGORY',
+        EntityType: 'ACTIVITY_CATEGORY' as const,
         id: category.id,
         familyId: category.familyId,
         name: category.name,
@@ -189,7 +189,7 @@ export class EventClassifierService {
         updatedAt: category.updatedAt.toISOString(),
       };
 
-      await this.dataAccess.putItem(dynamoItem);
+      await this.dataAccess.putItem(dynamoItem as any);
     }
   }
 }

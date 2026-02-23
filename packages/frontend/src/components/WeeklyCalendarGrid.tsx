@@ -8,7 +8,6 @@ import {
   formatDateReadable,
   getDayName,
   formatTime,
-  isSameDay,
 } from '../utils/dateUtils';
 import './WeeklyCalendarGrid.css';
 
@@ -150,7 +149,7 @@ export const WeeklyCalendarGrid: React.FC<WeeklyCalendarGridProps> = ({
           </div>
 
           <div className="days-grid">
-            {days.map((day, dayIndex) => (
+            {days.map((_, dayIndex) => (
               <div
                 key={`day-${dayIndex}`}
                 className="day-column"

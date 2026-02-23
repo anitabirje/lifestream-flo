@@ -6,15 +6,14 @@
 import { Router, Request, Response } from 'express';
 import { EventManagementService } from '../services/event-management-service';
 import { DashboardDataBuilder } from '../services/dashboard-data-builder';
-import { getDynamoDBClient } from '../data-access/dynamodb-client';
-import { getTableName } from '../config/dynamodb';
+import { dynamoDBDataAccess } from '../data-access/dynamodb-client';
+import { AuditLogger } from '../services/audit-logger';
 
 const router = Router();
 
 // Initialize services
-const dynamoClient = getDynamoDBClient();
-const tableName = getTableName();
-const eventService = new EventManagementService(dynamoClient, tableName);
+const auditLogger = new AuditLogger(dynamoDBDataAccess);
+const eventService = new EventManagementService(dynamoDBDataAccess, auditLogger);
 const dashboardBuilder = new DashboardDataBuilder();
 
 /**

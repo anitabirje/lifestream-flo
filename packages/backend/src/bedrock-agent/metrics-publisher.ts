@@ -76,8 +76,7 @@ export async function publishMetric(metric: MetricData): Promise<void> {
     await client.send(command);
     logger.info(`Published metric: ${metric.metricName}`, { metric });
   } catch (error) {
-    logger.error('Failed to publish metric', {
-      error: error instanceof Error ? error.message : String(error),
+    logger.error('Failed to publish metric', error instanceof Error ? error : new Error(String(error)), {
       metric: metric.metricName,
     });
     // Don't throw - metrics publishing should not block execution
@@ -120,8 +119,7 @@ export async function publishMetrics(metrics: MetricData[]): Promise<void> {
 
     logger.info(`Published ${metrics.length} metrics to CloudWatch`);
   } catch (error) {
-    logger.error('Failed to publish metrics batch', {
-      error: error instanceof Error ? error.message : String(error),
+    logger.error('Failed to publish metrics batch', error instanceof Error ? error : new Error(String(error)), {
       count: metrics.length,
     });
     // Don't throw - metrics publishing should not block execution

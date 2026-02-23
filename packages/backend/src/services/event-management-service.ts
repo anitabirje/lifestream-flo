@@ -54,7 +54,7 @@ export class EventManagementService {
   constructor(
     private dataAccess: DynamoDBDataAccess,
     private auditLogger: AuditLogger,
-    private agentDispatcher?: AgentTaskDispatcher
+    private agentDispatcher?: any
   ) {}
 
   /**

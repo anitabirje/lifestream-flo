@@ -156,7 +156,7 @@ export class ConflictResolutionLogger {
       'CONFLICT_DETECTION#'
     );
 
-    let logs = items as ConflictDetectionLog[];
+    let logs = items.map((item) => item as unknown as ConflictDetectionLog);
 
     // Sort by timestamp descending (most recent first)
     logs.sort((a, b) => new Date(b.detectedAt).getTime() - new Date(a.detectedAt).getTime());
@@ -181,7 +181,7 @@ export class ConflictResolutionLogger {
       'CONFLICT_RESOLUTION#'
     );
 
-    let logs = items as ConflictResolutionLog[];
+    let logs = items.map((item) => item as unknown as ConflictResolutionLog);
 
     // Sort by timestamp descending (most recent first)
     logs.sort((a, b) => new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime());
