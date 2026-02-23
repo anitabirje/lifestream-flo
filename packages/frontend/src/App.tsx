@@ -5,6 +5,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { Footer } from './components/Footer';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
+import { FloDashboardPage } from './pages/FloDashboardPage';
 import WeeklyCalendarGrid from './components/WeeklyCalendarGrid';
 import EventDetailModal from './components/EventDetailModal';
 import { Event, FamilyMember } from './types/calendar';
@@ -104,6 +105,7 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/dashboard" element={<FloDashboardPage />} />
           <Route
             path="/app"
             element={

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Navigation } from '../components/Navigation';
 import { HeroSection } from '../components/HeroSection';
 import { FeaturesGrid } from '../components/FeaturesGrid';
@@ -15,9 +16,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onLoginClick,
   onSignUpClick,
 }) => {
+  const navigate = useNavigate();
+
+  const handleDashboardClick = () => {
+    navigate('/dashboard');
+  };
+
   return (
     <main>
-      <Navigation onLoginClick={onLoginClick} onSignUpClick={onSignUpClick} />
+      <Navigation 
+        onLoginClick={handleDashboardClick} 
+        onSignUpClick={onSignUpClick}
+        onDashboardClick={handleDashboardClick}
+      />
       <HeroSection
         onGetStartedClick={onSignUpClick}
         onLearnMoreClick={() => {

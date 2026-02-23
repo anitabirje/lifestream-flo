@@ -4,11 +4,13 @@ import './Navigation.css';
 interface NavigationProps {
   onLoginClick?: () => void;
   onSignUpClick?: () => void;
+  onDashboardClick?: () => void;
 }
 
 export const Navigation: React.FC<NavigationProps> = ({
   onLoginClick,
   onSignUpClick,
+  onDashboardClick,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -56,6 +58,12 @@ export const Navigation: React.FC<NavigationProps> = ({
             onClick={() => handleNavClick('testimonials')}
           >
             Testimonials
+          </button>
+          <button
+            className="nav-link"
+            onClick={onDashboardClick}
+          >
+            Dashboard
           </button>
         </div>
 
