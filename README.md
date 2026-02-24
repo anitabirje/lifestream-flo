@@ -1,4 +1,4 @@
-# Flo - Family Calendar Progressive Web App
+# Flo - Family Calendar - Progressive Web App
 
 AI-powered family calendar with time tracking and agent orchestration.
 
@@ -21,9 +21,18 @@ lifestream-flo/
 
 ## Setup
 
-1. Install dependencies:
+1. Install dependencies and build packages (backend and frontend):
 ```bash
 npm run install:all
+
+cd packages/backend
+npm i
+npm run build
+
+cd ../../packages/frontend
+npm i
+mpm run build 
+
 ```
 
 2. Configure environment variables:
