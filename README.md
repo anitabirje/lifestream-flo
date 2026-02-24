@@ -2,6 +2,11 @@
 
 AI-powered family calendar with time tracking and agent orchestration.
 
+## Overview
+
+Flo is an intelligent family calendar and time management Progressive Web Application designed to help modern families coordinate schedules, track time allocation, and maintain work-life balance. By consolidating multiple calendar sources into a unified view and providing AI-powered insights, Flo transforms chaotic family scheduling into an organized, proactive system.
+
+
 ## Project Structure
 
 ```
