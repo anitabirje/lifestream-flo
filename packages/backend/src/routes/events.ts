@@ -9,43 +9,23 @@
 import { Router, Request, Response } from 'express';
 import { EventManagementService } from '../services/event-management-service';
 import { AuditLogger } from '../services/audit-logger';
-import { AgentTaskDispatcher } from '../services/agent-task-dispatcher';
-import { dynamoDBDataAccess, dynamoDBClientWrapper } from '../data-access/dynamodb-client';
+import { getDynamoDBClient } from '../data-access/dynamodb-client';
+import { dynamoDBDataAccess } from '../data-access/dynamodb-client';
 import { AuthService } from '../auth/auth-service';
 import { PasswordManager } from '../auth/password-manager';
 import { SessionManager } from '../auth/session-manager';
 import { authenticate, requirePermission } from '../middleware/access-control';
-import { AgentOrchestrator } from '../agents/agent-orchestrator';
-import { CalendarSourceRegistry } from '../services/calendar-source-registry';
 
 const router = Router();
 
 // Initialize services
+const dynamoClient = getDynamoDBClient();
 const passwordManager = new PasswordManager();
-const sessionManager = new SessionManager(dynamoDBDataAccess);
-const authService = new AuthService(dynamoDBDataAccess, passwordManager, sessionManager);
+const sessionManager = new SessionManager(dynamoClient);
+const authService = new AuthService(dynamoClient, passwordManager, sessionManager);
 const auditLogger = new AuditLogger(dynamoDBDataAccess);
 
-// Initialize agent-based services
-const orchestrator = new AgentOrchestrator({
-  maxConcurrentAgents: 5,
-  taskTimeout: 30000,
-  retryStrategy: 'exponential',
-  retryDelay: 1000,
-  healthCheckInterval: 60000,
-});
-
-const registry = new CalendarSourceRegistry(dynamoDBClientWrapper, {
-  encryptionKey: process.env.ENCRYPTION_KEY || 'default-key',
-});
-
-const agentDispatcher = new AgentTaskDispatcher(orchestrator, registry, {
-  maxRetries: 3,
-  taskTimeout: 30000,
-  loadBalancingStrategy: 'least_loaded',
-});
-
-const eventService = new EventManagementService(dynamoDBDataAccess, agentDispatcher, auditLogger);
+const eventService = new EventManagementService(dynamoDBDataAccess, auditLogger);
 
 /**
  * POST /api/events

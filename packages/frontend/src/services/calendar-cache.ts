@@ -21,7 +21,6 @@ export interface WeekData {
   cachedAt: string; // ISO timestamp
 }
 
-const CACHE_KEY_PREFIX = 'flo_calendar_';
 const CURRENT_WEEK_KEY = 'flo_current_week';
 const MAX_CACHE_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
 

@@ -3,7 +3,7 @@
  * Integrates with external weather data provider to retrieve forecasts, AQI, UV, and precipitation
  */
 
-import { WeatherData } from './weather-agent';
+import { WeatherData } from './types';
 
 /**
  * Weather API configuration

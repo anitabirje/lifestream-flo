@@ -3,6 +3,8 @@
  * Manages push notification permissions with clear user explanations
  */
 
+import { pushNotificationClient } from './push-notification-client';
+
 export type NotificationPermissionStatus = 'default' | 'granted' | 'denied';
 
 export interface NotificationExplanation {
@@ -76,7 +78,7 @@ export class NotificationPermissionService {
    * Subscribe to push notifications
    */
   async subscribeToPush(): Promise<PushSubscription | null> {
-    if (!this.isSupported()) {
+    if (!pushNotificationClient.isSupported()) {
       return null;
     }
 
@@ -85,22 +87,14 @@ export class NotificationPermissionService {
     }
 
     try {
-      const registration = await navigator.serviceWorker.ready;
-      
-      // Check if already subscribed
-      const existingSubscription = await registration.pushManager.getSubscription();
-      if (existingSubscription) {
-        return existingSubscription;
-      }
+      // Initialize push client
+      await pushNotificationClient.initialize();
 
       // Subscribe to push notifications
-      // Note: In production, you would use your VAPID public key here
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: this.urlBase64ToUint8Array(
-          process.env.VITE_VAPID_PUBLIC_KEY || ''
-        ),
-      });
+      const subscription = await pushNotificationClient.subscribe();
+
+      // Send subscription to server
+      await pushNotificationClient.sendSubscriptionToServer(subscription);
 
       return subscription;
     } catch (error) {
@@ -113,19 +107,22 @@ export class NotificationPermissionService {
    * Unsubscribe from push notifications
    */
   async unsubscribeFromPush(): Promise<boolean> {
-    if (!this.isSupported()) {
+    if (!pushNotificationClient.isSupported()) {
       return false;
     }
 
     try {
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
-      
+      const subscription = await pushNotificationClient.getSubscription();
+
       if (subscription) {
-        const success = await subscription.unsubscribe();
+        // Remove from server
+        await pushNotificationClient.removeSubscriptionFromServer(subscription);
+
+        // Unsubscribe locally
+        const success = await pushNotificationClient.unsubscribe();
         return success;
       }
-      
+
       return true;
     } catch (error) {
       console.error('Failed to unsubscribe from push notifications:', error);
@@ -137,62 +134,14 @@ export class NotificationPermissionService {
    * Send subscription to server
    */
   async sendSubscriptionToServer(subscription: PushSubscription): Promise<void> {
-    try {
-      const response = await fetch('/api/push-subscriptions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(subscription),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-    } catch (error) {
-      console.error('Failed to send subscription to server:', error);
-      throw new Error('Failed to register push subscription');
-    }
+    await pushNotificationClient.sendSubscriptionToServer(subscription);
   }
 
   /**
    * Remove subscription from server
    */
   async removeSubscriptionFromServer(subscription: PushSubscription): Promise<void> {
-    try {
-      const response = await fetch('/api/push-subscriptions', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ endpoint: subscription.endpoint }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-    } catch (error) {
-      console.error('Failed to remove subscription from server:', error);
-      throw new Error('Failed to unregister push subscription');
-    }
-  }
-
-  /**
-   * Convert VAPID key from base64 to Uint8Array
-   */
-  private urlBase64ToUint8Array(base64String: string): Uint8Array {
-    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-    const base64 = (base64String + padding)
-      .replace(/\-/g, '+')
-      .replace(/_/g, '/');
-
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
+    await pushNotificationClient.removeSubscriptionFromServer(subscription);
   }
 
   /**
@@ -204,14 +153,7 @@ export class NotificationPermissionService {
     }
 
     try {
-      const registration = await navigator.serviceWorker.ready;
-      await registration.showNotification('Flo Notifications Enabled', {
-        body: 'You will now receive updates about your family schedule.',
-        icon: '/pwa-192x192.png',
-        badge: '/pwa-192x192.png',
-        tag: 'test-notification',
-        requireInteraction: false,
-      });
+      await pushNotificationClient.showTestNotification();
     } catch (error) {
       console.error('Failed to show test notification:', error);
     }

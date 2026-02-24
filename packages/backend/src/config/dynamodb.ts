@@ -30,3 +30,11 @@ export const docClient = DynamoDBDocumentClient.from(client, {
 });
 
 export const dynamoDBClient = client;
+
+export function getDynamoDBClient() {
+  return dynamoDBClient;
+}
+
+export function getTableName(): string {
+  return config.dynamodb.tableName;
+}

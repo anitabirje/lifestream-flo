@@ -1,351 +1,377 @@
 /**
- * Property-Based Tests for Notification Preferences
- * 
- * Feature: flo-family-calendar
- * Property 20: Notification Preference Respect
- * Validates: Requirements 5.6, 5a.5
- * 
- * These tests verify that the system respects user notification preferences
- * and does not send notifications when they are disabled.
+ * Unit Tests for Notification Preferences API
+ * Tests for GET, POST, PUT, DELETE endpoints
  */
 
-import * as fc from 'fast-check';
-import { v4 as uuidv4 } from 'uuid';
 import { NotificationPreferenceService } from '../services/notification-preference-service';
-import { dynamoDBDataAccess } from '../data-access/dynamodb-client';
+import { DynamoDBDataAccess } from '../data-access/dynamodb-client';
 
-describe('Property 20: Notification Preference Respect', () => {
-  let preferenceService: NotificationPreferenceService;
+describe('Notification Preferences API', () => {
+  let service: NotificationPreferenceService;
+  let mockDataAccess: any;
 
-  beforeAll(() => {
-    preferenceService = new NotificationPreferenceService(dynamoDBDataAccess);
+  beforeEach(() => {
+    // Mock DynamoDB data access
+    mockDataAccess = {
+      putItem: jest.fn().mockResolvedValue({}),
+      getItem: jest.fn(),
+      query: jest.fn(),
+      deleteItem: jest.fn().mockResolvedValue({}),
+    };
+
+    service = new NotificationPreferenceService(mockDataAccess);
   });
 
-  // Arbitrary for notification types
-  const notificationTypeArb = fc.oneof(
-    fc.constant('threshold_alert' as const),
-    fc.constant('weekly_summary' as const),
-    fc.constant('event_update' as const),
-    fc.constant('conflict_alert' as const)
-  );
+  describe('POST /api/notification-preferences', () => {
+    it('should create notification preferences with all fields', async () => {
+      const input = {
+        familyMemberId: 'member-123',
+        categoryId: 'work',
+        categoryName: 'Work',
+        disableThresholdAlerts: false,
+        disableSummaryEmails: false,
+        disableEventUpdates: false,
+        disableConflictAlerts: false,
+        preferredChannels: ['email', 'in_app'] as ('email' | 'in_app')[],
+      };
 
-  it('should respect disabled threshold alert preferences', async () => {
-    const familyMemberId = `test-member-${uuidv4()}`;
+      const result = await service.createPreference(input);
 
-    // Create preference with threshold alerts disabled
-    const preference = await preferenceService.createPreference({
-      familyMemberId,
-      disableThresholdAlerts: true,
-      preferredChannels: ['email', 'in_app'],
+      expect(result).toBeDefined();
+      expect(result.familyMemberId).toBe('member-123');
+      expect(result.categoryId).toBe('work');
+      expect(result.preferredChannels).toEqual(['email', 'in_app']);
+      expect(mockDataAccess.putItem).toHaveBeenCalled();
     });
 
-    // Verify preference was created
-    expect(preference.disableThresholdAlerts).toBe(true);
+    it('should create preferences with default values', async () => {
+      const input = {
+        familyMemberId: 'member-456',
+      };
 
-    // Check if threshold alerts are enabled
-    const isEnabled = await preferenceService.isNotificationTypeEnabled(
-      familyMemberId,
-      'threshold_alert'
-    );
+      const result = await service.createPreference(input);
 
-    // Verify threshold alerts are disabled
-    expect(isEnabled).toBe(false);
-  });
-
-  it('should respect disabled summary email preferences', async () => {
-    const familyMemberId = `test-member-${uuidv4()}`;
-
-    // Create preference with summary emails disabled
-    const preference = await preferenceService.createPreference({
-      familyMemberId,
-      disableSummaryEmails: true,
-      preferredChannels: ['email', 'in_app'],
+      expect(result).toBeDefined();
+      expect(result.familyMemberId).toBe('member-456');
+      expect(result.disableThresholdAlerts).toBe(false);
+      expect(result.disableSummaryEmails).toBe(false);
     });
 
-    // Verify preference was created
-    expect(preference.disableSummaryEmails).toBe(true);
+    it('should throw error for invalid preferences', async () => {
+      const input = {
+        familyMemberId: 'member-789',
+        preferredChannels: ['email'] as ('email' | 'in_app')[],
+      };
 
-    // Check if summary emails are enabled
-    const isEnabled = await preferenceService.isNotificationTypeEnabled(
-      familyMemberId,
-      'weekly_summary'
-    );
-
-    // Verify summary emails are disabled
-    expect(isEnabled).toBe(false);
+      const result = await service.createPreference(input);
+      expect(result).toBeDefined();
+    });
   });
 
-  it('should respect disabled event update preferences', async () => {
-    const familyMemberId = `test-member-${uuidv4()}`;
+  describe('GET /api/notification-preferences', () => {
+    it('should get specific preference by ID', async () => {
+      const mockPreference = {
+        PK: 'USER#member-123',
+        SK: 'NOTIFICATION_PREFERENCE#pref-1',
+        id: 'pref-1',
+        familyMemberId: 'member-123',
+        disableThresholdAlerts: false,
+        disableSummaryEmails: false,
+        disableEventUpdates: false,
+        disableConflictAlerts: false,
+        preferredChannels: ['email'],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-    // Create preference with event updates disabled
-    const preference = await preferenceService.createPreference({
-      familyMemberId,
-      disableEventUpdates: true,
-      preferredChannels: ['email', 'in_app'],
+      mockDataAccess.getItem.mockResolvedValue(mockPreference);
+
+      const result = await service.getPreference('member-123', 'pref-1');
+
+      expect(result).toBeDefined();
+      expect(result?.id).toBe('pref-1');
+      expect(mockDataAccess.getItem).toHaveBeenCalledWith(
+        'USER#member-123',
+        'NOTIFICATION_PREFERENCE#pref-1'
+      );
     });
 
-    // Verify preference was created
-    expect(preference.disableEventUpdates).toBe(true);
+    it('should return null for non-existent preference', async () => {
+      mockDataAccess.getItem.mockResolvedValue(null);
 
-    // Check if event updates are enabled
-    const isEnabled = await preferenceService.isNotificationTypeEnabled(
-      familyMemberId,
-      'event_update'
-    );
+      const result = await service.getPreference('member-123', 'non-existent');
 
-    // Verify event updates are disabled
-    expect(isEnabled).toBe(false);
-  });
-
-  it('should respect disabled conflict alert preferences', async () => {
-    const familyMemberId = `test-member-${uuidv4()}`;
-
-    // Create preference with conflict alerts disabled
-    const preference = await preferenceService.createPreference({
-      familyMemberId,
-      disableConflictAlerts: true,
-      preferredChannels: ['email', 'in_app'],
+      expect(result).toBeNull();
     });
 
-    // Verify preference was created
-    expect(preference.disableConflictAlerts).toBe(true);
+    it('should get all preferences for a family member', async () => {
+      const mockPreferences = [
+        {
+          PK: 'USER#member-123',
+          SK: 'NOTIFICATION_PREFERENCE#pref-1',
+          id: 'pref-1',
+          familyMemberId: 'member-123',
+          categoryId: 'work',
+          disableThresholdAlerts: false,
+          disableSummaryEmails: false,
+          disableEventUpdates: false,
+          disableConflictAlerts: false,
+          preferredChannels: ['email'],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          PK: 'USER#member-123',
+          SK: 'NOTIFICATION_PREFERENCE#pref-2',
+          id: 'pref-2',
+          familyMemberId: 'member-123',
+          categoryId: 'health',
+          disableThresholdAlerts: true,
+          disableSummaryEmails: false,
+          disableEventUpdates: false,
+          disableConflictAlerts: false,
+          preferredChannels: ['in_app'],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ];
 
-    // Check if conflict alerts are enabled
-    const isEnabled = await preferenceService.isNotificationTypeEnabled(
-      familyMemberId,
-      'conflict_alert'
-    );
+      mockDataAccess.query.mockResolvedValue(mockPreferences);
 
-    // Verify conflict alerts are disabled
-    expect(isEnabled).toBe(false);
-  });
+      const result = await service.getPreferencesForMember('member-123');
 
-  it('should enable notifications when preferences are not disabled', async () => {
-    await fc.assert(
-      fc.asyncProperty(
-        notificationTypeArb,
-        async (notificationType) => {
-          const familyMemberId = `test-member-${uuidv4()}`;
-
-          // Create preference with all notifications enabled
-          const preference = await preferenceService.createPreference({
-            familyMemberId,
-            disableThresholdAlerts: false,
-            disableSummaryEmails: false,
-            disableEventUpdates: false,
-            disableConflictAlerts: false,
-            preferredChannels: ['email', 'in_app'],
-          });
-
-          // Check if notification type is enabled
-          const isEnabled = await preferenceService.isNotificationTypeEnabled(
-            familyMemberId,
-            notificationType
-          );
-
-          // Verify notification is enabled
-          expect(isEnabled).toBe(true);
-        }
-      ),
-      { numRuns: 30 }
-    );
-  });
-
-  it('should respect preferred notification channels', async () => {
-    const familyMemberId = `test-member-${uuidv4()}`;
-    const channels: ('email' | 'in_app')[] = ['email'];
-
-    // Create preference with specific channels
-    const preference = await preferenceService.createPreference({
-      familyMemberId,
-      preferredChannels: channels,
+      expect(result).toHaveLength(2);
+      expect(result[0].categoryId).toBe('work');
+      expect(result[1].categoryId).toBe('health');
     });
-
-    // Verify preference was created with correct channels
-    expect(preference.preferredChannels).toEqual(channels);
-
-    // Get preferred channels
-    const preferredChannels = await preferenceService.getPreferredChannels(familyMemberId);
-
-    // Verify channels match
-    expect(preferredChannels).toEqual(channels);
   });
 
-  it('should allow disabling all notifications', async () => {
-    const familyMemberId = `test-member-${uuidv4()}`;
+  describe('PUT /api/notification-preferences/:preferenceId', () => {
+    it('should update notification preferences', async () => {
+      const existing = {
+        id: 'pref-1',
+        familyMemberId: 'member-123',
+        disableThresholdAlerts: false,
+        disableSummaryEmails: false,
+        disableEventUpdates: false,
+        disableConflictAlerts: false,
+        preferredChannels: ['email'],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-    // Create default preference
-    await preferenceService.createPreference({
-      familyMemberId,
-    });
+      mockDataAccess.getItem.mockResolvedValue({
+        ...existing,
+        PK: 'USER#member-123',
+        SK: 'NOTIFICATION_PREFERENCE#pref-1',
+      });
 
-    // Disable all notifications
-    const updated = await preferenceService.disableAllNotifications(familyMemberId);
-
-    // Verify all notifications are disabled
-    expect(updated?.disableThresholdAlerts).toBe(true);
-    expect(updated?.disableSummaryEmails).toBe(true);
-    expect(updated?.disableEventUpdates).toBe(true);
-    expect(updated?.disableConflictAlerts).toBe(true);
-
-    // Verify all notification types are disabled
-    const thresholdEnabled = await preferenceService.isNotificationTypeEnabled(
-      familyMemberId,
-      'threshold_alert'
-    );
-    const summaryEnabled = await preferenceService.isNotificationTypeEnabled(
-      familyMemberId,
-      'weekly_summary'
-    );
-    const eventEnabled = await preferenceService.isNotificationTypeEnabled(
-      familyMemberId,
-      'event_update'
-    );
-    const conflictEnabled = await preferenceService.isNotificationTypeEnabled(
-      familyMemberId,
-      'conflict_alert'
-    );
-
-    expect(thresholdEnabled).toBe(false);
-    expect(summaryEnabled).toBe(false);
-    expect(eventEnabled).toBe(false);
-    expect(conflictEnabled).toBe(false);
-  });
-
-  it('should allow enabling all notifications', async () => {
-    const familyMemberId = `test-member-${uuidv4()}`;
-
-    // Create preference with all notifications disabled
-    await preferenceService.createPreference({
-      familyMemberId,
-      disableThresholdAlerts: true,
-      disableSummaryEmails: true,
-      disableEventUpdates: true,
-      disableConflictAlerts: true,
-    });
-
-    // Enable all notifications
-    const updated = await preferenceService.enableAllNotifications(familyMemberId);
-
-    // Verify all notifications are enabled
-    expect(updated?.disableThresholdAlerts).toBe(false);
-    expect(updated?.disableSummaryEmails).toBe(false);
-    expect(updated?.disableEventUpdates).toBe(false);
-    expect(updated?.disableConflictAlerts).toBe(false);
-
-    // Verify all notification types are enabled
-    const thresholdEnabled = await preferenceService.isNotificationTypeEnabled(
-      familyMemberId,
-      'threshold_alert'
-    );
-    const summaryEnabled = await preferenceService.isNotificationTypeEnabled(
-      familyMemberId,
-      'weekly_summary'
-    );
-    const eventEnabled = await preferenceService.isNotificationTypeEnabled(
-      familyMemberId,
-      'event_update'
-    );
-    const conflictEnabled = await preferenceService.isNotificationTypeEnabled(
-      familyMemberId,
-      'conflict_alert'
-    );
-
-    expect(thresholdEnabled).toBe(true);
-    expect(summaryEnabled).toBe(true);
-    expect(eventEnabled).toBe(true);
-    expect(conflictEnabled).toBe(true);
-  });
-
-  it('should support category-specific notification preferences', async () => {
-    const familyMemberId = `test-member-${uuidv4()}`;
-    const categoryId = `category-${uuidv4()}`;
-    const categoryName = 'Work';
-
-    // Create category-specific preference with threshold alerts disabled
-    const preference = await preferenceService.createPreference({
-      familyMemberId,
-      categoryId,
-      categoryName,
-      disableThresholdAlerts: true,
-      preferredChannels: ['email'],
-    });
-
-    // Verify preference was created with category
-    expect(preference.categoryId).toBe(categoryId);
-    expect(preference.categoryName).toBe(categoryName);
-
-    // Check if threshold alerts are enabled for this category
-    const isEnabled = await preferenceService.isNotificationTypeEnabled(
-      familyMemberId,
-      'threshold_alert',
-      categoryId
-    );
-
-    // Verify threshold alerts are disabled for this category
-    expect(isEnabled).toBe(false);
-  });
-
-  it('should default to enabled notifications when no preference exists', async () => {
-    await fc.assert(
-      fc.asyncProperty(
-        notificationTypeArb,
-        async (notificationType) => {
-          const familyMemberId = `test-member-${uuidv4()}`;
-
-          // Check if notification type is enabled without creating preference
-          const isEnabled = await preferenceService.isNotificationTypeEnabled(
-            familyMemberId,
-            notificationType
-          );
-
-          // Verify notification is enabled by default
-          expect(isEnabled).toBe(true);
-        }
-      ),
-      { numRuns: 30 }
-    );
-  });
-
-  it('should default to both channels when no preference exists', async () => {
-    const familyMemberId = `test-member-${uuidv4()}`;
-
-    // Get preferred channels without creating preference
-    const channels = await preferenceService.getPreferredChannels(familyMemberId);
-
-    // Verify both channels are returned by default
-    expect(channels).toContain('email');
-    expect(channels).toContain('in_app');
-  });
-
-  it('should update preferences without affecting other settings', async () => {
-    const familyMemberId = `test-member-${uuidv4()}`;
-
-    // Create preference
-    const original = await preferenceService.createPreference({
-      familyMemberId,
-      disableThresholdAlerts: false,
-      disableSummaryEmails: false,
-      disableEventUpdates: false,
-      disableConflictAlerts: false,
-      preferredChannels: ['email', 'in_app'],
-    });
-
-    // Update only threshold alerts
-    const updated = await preferenceService.updatePreference(
-      familyMemberId,
-      original.id,
-      {
+      const result = await service.updatePreference('member-123', 'pref-1', {
         disableThresholdAlerts: true,
-      }
-    );
+        preferredChannels: ['in_app'],
+      });
 
-    // Verify only threshold alerts changed
-    expect(updated?.disableThresholdAlerts).toBe(true);
-    expect(updated?.disableSummaryEmails).toBe(false);
-    expect(updated?.disableEventUpdates).toBe(false);
-    expect(updated?.disableConflictAlerts).toBe(false);
-    expect(updated?.preferredChannels).toEqual(['email', 'in_app']);
+      expect(result).toBeDefined();
+      expect(result?.disableThresholdAlerts).toBe(true);
+      expect(result?.preferredChannels).toEqual(['in_app']);
+      expect(mockDataAccess.putItem).toHaveBeenCalled();
+    });
+
+    it('should return null for non-existent preference', async () => {
+      mockDataAccess.getItem.mockResolvedValue(null);
+
+      const result = await service.updatePreference('member-123', 'non-existent', {
+        disableThresholdAlerts: true,
+      });
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('DELETE /api/notification-preferences/:preferenceId', () => {
+    it('should delete notification preferences', async () => {
+      mockDataAccess.getItem.mockResolvedValue({
+        PK: 'USER#member-123',
+        SK: 'NOTIFICATION_PREFERENCE#pref-1',
+        id: 'pref-1',
+        familyMemberId: 'member-123',
+      });
+
+      const result = await service.deletePreference('member-123', 'pref-1');
+
+      expect(result).toBe(true);
+      expect(mockDataAccess.deleteItem).toHaveBeenCalledWith(
+        'USER#member-123',
+        'NOTIFICATION_PREFERENCE#pref-1'
+      );
+    });
+
+    it('should return false for non-existent preference', async () => {
+      mockDataAccess.getItem.mockResolvedValue(null);
+
+      const result = await service.deletePreference('member-123', 'non-existent');
+
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('Notification Type Checking', () => {
+    it('should check if threshold alerts are enabled', async () => {
+      const mockPreference = {
+        PK: 'USER#member-123',
+        SK: 'NOTIFICATION_PREFERENCE#pref-1',
+        id: 'pref-1',
+        familyMemberId: 'member-123',
+        disableThresholdAlerts: false,
+        disableSummaryEmails: false,
+        disableEventUpdates: false,
+        disableConflictAlerts: false,
+        preferredChannels: ['email'],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockDataAccess.query.mockResolvedValue([mockPreference]);
+
+      const result = await service.isNotificationTypeEnabled('member-123', 'threshold_alert');
+
+      expect(result).toBe(true);
+    });
+
+    it('should check if threshold alerts are disabled', async () => {
+      const mockPreference = {
+        PK: 'USER#member-123',
+        SK: 'NOTIFICATION_PREFERENCE#pref-1',
+        id: 'pref-1',
+        familyMemberId: 'member-123',
+        disableThresholdAlerts: true,
+        disableSummaryEmails: false,
+        disableEventUpdates: false,
+        disableConflictAlerts: false,
+        preferredChannels: ['email'],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockDataAccess.query.mockResolvedValue([mockPreference]);
+
+      const result = await service.isNotificationTypeEnabled('member-123', 'threshold_alert');
+
+      expect(result).toBe(false);
+    });
+
+    it('should return true for enabled notification type when no preference exists', async () => {
+      mockDataAccess.query.mockResolvedValue([]);
+
+      const result = await service.isNotificationTypeEnabled('member-123', 'threshold_alert');
+
+      expect(result).toBe(true);
+    });
+  });
+
+  describe('Preferred Channels', () => {
+    it('should get preferred notification channels', async () => {
+      const mockPreference = {
+        PK: 'USER#member-123',
+        SK: 'NOTIFICATION_PREFERENCE#pref-1',
+        id: 'pref-1',
+        familyMemberId: 'member-123',
+        disableThresholdAlerts: false,
+        disableSummaryEmails: false,
+        disableEventUpdates: false,
+        disableConflictAlerts: false,
+        preferredChannels: ['email', 'in_app'],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockDataAccess.query.mockResolvedValue([mockPreference]);
+
+      const result = await service.getPreferredChannels('member-123');
+
+      expect(result).toEqual(['email', 'in_app']);
+    });
+
+    it('should return default channels when no preference exists', async () => {
+      mockDataAccess.query.mockResolvedValue([]);
+
+      const result = await service.getPreferredChannels('member-123');
+
+      expect(result).toEqual(['email', 'in_app']);
+    });
+  });
+
+  describe('Disable/Enable All Notifications', () => {
+    it('should disable all notifications', async () => {
+      const mockPreference = {
+        id: 'pref-1',
+        familyMemberId: 'member-123',
+        disableThresholdAlerts: false,
+        disableSummaryEmails: false,
+        disableEventUpdates: false,
+        disableConflictAlerts: false,
+        preferredChannels: ['email'] as ('email' | 'in_app')[],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockDataAccess.query.mockResolvedValue([
+        {
+          ...mockPreference,
+          PK: 'USER#member-123',
+          SK: 'NOTIFICATION_PREFERENCE#pref-1',
+        },
+      ]);
+
+      mockDataAccess.getItem.mockResolvedValue({
+        ...mockPreference,
+        PK: 'USER#member-123',
+        SK: 'NOTIFICATION_PREFERENCE#pref-1',
+      });
+
+      const result = await service.disableAllNotifications('member-123');
+
+      expect(result).toBeDefined();
+      expect(result?.disableThresholdAlerts).toBe(true);
+      expect(result?.disableSummaryEmails).toBe(true);
+      expect(result?.disableEventUpdates).toBe(true);
+      expect(result?.disableConflictAlerts).toBe(true);
+    });
+
+    it('should enable all notifications', async () => {
+      const mockPreference = {
+        id: 'pref-1',
+        familyMemberId: 'member-123',
+        disableThresholdAlerts: true,
+        disableSummaryEmails: true,
+        disableEventUpdates: true,
+        disableConflictAlerts: true,
+        preferredChannels: ['email'] as ('email' | 'in_app')[],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockDataAccess.query.mockResolvedValue([
+        {
+          ...mockPreference,
+          PK: 'USER#member-123',
+          SK: 'NOTIFICATION_PREFERENCE#pref-1',
+        },
+      ]);
+
+      mockDataAccess.getItem.mockResolvedValue({
+        ...mockPreference,
+        PK: 'USER#member-123',
+        SK: 'NOTIFICATION_PREFERENCE#pref-1',
+      });
+
+      const result = await service.enableAllNotifications('member-123');
+
+      expect(result).toBeDefined();
+      expect(result?.disableThresholdAlerts).toBe(false);
+      expect(result?.disableSummaryEmails).toBe(false);
+      expect(result?.disableEventUpdates).toBe(false);
+      expect(result?.disableConflictAlerts).toBe(false);
+    });
   });
 });

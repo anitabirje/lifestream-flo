@@ -11,9 +11,6 @@ import { TimeBookingAcceptanceService } from '../services/time-booking-acceptanc
 import { IdealAllocationService } from '../services/ideal-allocation-service';
 import { EventManagementService } from '../services/event-management-service';
 import { AuditLogger } from '../services/audit-logger';
-import { AgentTaskDispatcher } from '../services/agent-task-dispatcher';
-import { AgentOrchestrator } from '../agents/agent-orchestrator';
-import { CalendarSourceRegistry } from '../services/calendar-source-registry';
 import { dynamoDBDataAccess, dynamoDBClientWrapper } from '../data-access/dynamodb-client';
 import { dynamoDBClient } from '../config/dynamodb';
 import { config } from '../config/env';
@@ -27,27 +24,7 @@ const suggestionRepository = new BookingSuggestionRepository(dynamoDBClient, tab
 const idealAllocationService = new IdealAllocationService(dynamoDBClient, tableName);
 const auditLogger = new AuditLogger(dynamoDBDataAccess);
 
-// Initialize agent-based services
-const orchestrator = new AgentOrchestrator({
-  maxConcurrentAgents: 5,
-  taskTimeout: 30000,
-  retryStrategy: 'exponential',
-  retryDelay: 1000,
-  healthCheckInterval: 60000,
-});
-
-const registry = new CalendarSourceRegistry(dynamoDBClientWrapper, {
-  encryptionKey: process.env.ENCRYPTION_KEY || 'default-key',
-  maxRetries: 3,
-});
-
-const agentDispatcher = new AgentTaskDispatcher(orchestrator, registry, {
-  maxRetries: 3,
-  taskTimeout: 30000,
-  loadBalancingStrategy: 'least_loaded',
-});
-
-const eventManagementService = new EventManagementService(dynamoDBDataAccess, agentDispatcher, auditLogger);
+const eventManagementService = new EventManagementService(dynamoDBDataAccess, auditLogger);
 const acceptanceService = new TimeBookingAcceptanceService(suggestionRepository, eventManagementService);
 
 /**

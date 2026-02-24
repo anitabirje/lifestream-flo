@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import { createServer } from 'http';
 import { config } from './config/env';
 import authRoutes from './routes/auth';
 import familyMembersRoutes from './routes/family-members';
@@ -9,8 +10,16 @@ import eventsRoutes from './routes/events';
 import dashboardRoutes from './routes/dashboard';
 import thresholdsRoutes from './routes/thresholds';
 import bookingSuggestionsRoutes from './routes/booking-suggestions';
+import calendarSourcesRoutes from './routes/calendar-sources';
+import oauthRoutes from './routes/oauth';
+import notificationPreferencesRoutes from './routes/notification-preferences';
+import conflictsRoutes from './routes/conflicts';
+import syncRoutes from './routes/sync';
+import pushSubscriptionsRoutes from './routes/push-subscriptions';
+import { initializeWebSocketServer } from './services/websocket-server';
 
 const app = express();
+const httpServer = createServer(app);
 
 app.use(cors());
 app.use(express.json());
@@ -43,11 +52,34 @@ app.use('/api/thresholds', thresholdsRoutes);
 // Booking suggestions routes
 app.use('/api/booking-suggestions', bookingSuggestionsRoutes);
 
+// Calendar sources routes
+app.use('/api/calendar-sources', calendarSourcesRoutes);
+
+// OAuth routes
+app.use('/api/oauth', oauthRoutes);
+
+// Notification preferences routes
+app.use('/api/notification-preferences', notificationPreferencesRoutes);
+
+// Conflicts routes
+app.use('/api/conflicts', conflictsRoutes);
+
+// Sync routes
+app.use('/api/sync', syncRoutes);
+
+// Push subscriptions routes
+app.use('/api/push-subscriptions', pushSubscriptionsRoutes);
+
+// Initialize WebSocket server
+const wsServer = initializeWebSocketServer(httpServer);
+console.log('WebSocket server initialized');
+
 const PORT = config.app.port;
 
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`Flo backend server running on port ${PORT}`);
   console.log(`Environment: ${config.app.nodeEnv}`);
+  console.log(`WebSocket server available at ws://localhost:${PORT}/ws`);
 });
 
-export { app };
+export { app, httpServer, wsServer };

@@ -142,7 +142,7 @@ export const TimeTrackingDashboard: React.FC<DashboardProps> = ({
       // Mock comparative data
       familyMembers.forEach(member => {
         familyMemberComparison[member.name] = {};
-        dataWithPercentages.forEach(item => {
+        dataWithPercentages.forEach((item: any) => {
           const mockValue = Math.random() * item.idealHours * 1.3;
           familyMemberComparison[member.name][item.category] = mockValue;
           

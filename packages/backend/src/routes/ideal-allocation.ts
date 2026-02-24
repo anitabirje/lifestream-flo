@@ -5,15 +5,14 @@
 
 import { Router, Request, Response } from 'express';
 import { IdealAllocationService } from '../services/ideal-allocation-service';
-import { getDynamoDBClient } from '../data-access/dynamodb-client';
+import { dynamoDBClient } from '../config/dynamodb';
 import { getTableName } from '../config/dynamodb';
 
 const router = Router();
 
 // Initialize service
-const dynamoClient = getDynamoDBClient();
 const tableName = getTableName();
-const idealAllocationService = new IdealAllocationService(dynamoClient, tableName);
+const idealAllocationService = new IdealAllocationService(dynamoDBClient, tableName);
 
 /**
  * PUT /api/ideal-allocation

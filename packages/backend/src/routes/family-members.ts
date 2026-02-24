@@ -10,16 +10,17 @@ import { UserManagementService } from '../auth/user-management-service';
 import { PasswordManager } from '../auth/password-manager';
 import { SessionManager } from '../auth/session-manager';
 import { AuthService } from '../auth/auth-service';
-import { dynamoDBDataAccess } from '../data-access/dynamodb-client';
+import { getDynamoDBClient } from '../data-access/dynamodb-client';
 import { authenticate, requirePermission } from '../middleware/access-control';
 
 const router = Router();
 
 // Initialize services
+const dynamoClient = getDynamoDBClient();
 const passwordManager = new PasswordManager();
-const sessionManager = new SessionManager(dynamoDBDataAccess);
-const authService = new AuthService(dynamoDBDataAccess, passwordManager, sessionManager);
-const userManagementService = new UserManagementService(dynamoDBDataAccess, passwordManager);
+const sessionManager = new SessionManager(dynamoClient);
+const authService = new AuthService(dynamoClient, passwordManager, sessionManager);
+const userManagementService = new UserManagementService(dynamoClient, passwordManager);
 
 /**
  * POST /api/family-members

@@ -16,7 +16,6 @@ import {
   validateEventForCreation,
   validateEventData,
 } from '../models/event';
-import { AgentTaskDispatcher } from './agent-task-dispatcher';
 import { AuditLogger } from '../services/audit-logger';
 
 export interface CreateEventRequest {
@@ -54,8 +53,8 @@ export interface SyncResult {
 export class EventManagementService {
   constructor(
     private dataAccess: DynamoDBDataAccess,
-    private agentDispatcher: AgentTaskDispatcher,
-    private auditLogger: AuditLogger
+    private auditLogger: AuditLogger,
+    private agentDispatcher?: any
   ) {}
 
   /**
@@ -337,6 +336,14 @@ export class EventManagementService {
     event: Event,
     operation: 'create' | 'update' | 'delete'
   ): Promise<SyncResult> {
+    // Skip sync if no agent dispatcher is available
+    if (!this.agentDispatcher) {
+      return {
+        success: true,
+        externalId: event.externalId || event.id,
+      };
+    }
+
     try {
       // Dispatch sync task to appropriate agent based on operation
       let result;

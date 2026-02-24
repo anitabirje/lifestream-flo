@@ -1,0 +1,115 @@
+/* Footer Component Styles */
+
+.footer {
+  background-color: var(--color-card);
+  border-top: 1px solid var(--color-border);
+  padding: var(--spacing-xxl);
+}
+
+.footer-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-xxl);
+}
+
+.footer-content {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xxl);
+}
+
+.footer-logo {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-black);
+  flex-shrink: 0;
+}
+
+.footer-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.footer-copyright {
+  font-size: var(--font-size-body-small);
+  color: var(--color-muted);
+  margin: 0;
+}
+
+.footer-hackathon {
+  font-size: var(--font-size-body-small);
+  color: var(--color-muted);
+  margin: 0;
+  font-weight: var(--font-weight-semibold);
+}
+
+.footer-aws {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  flex-shrink: 0;
+}
+
+.footer-aws-text {
+  font-size: var(--font-size-body-small);
+  color: var(--color-muted);
+  margin: 0;
+}
+
+.aws-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background-color: var(--color-dark);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-body-small);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .footer-container {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--spacing-lg);
+  }
+
+  .footer-content {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
+  .footer-aws {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .footer {
+    padding: var(--spacing-lg);
+  }
+
+  .footer-logo {
+    font-size: var(--font-size-h4);
+  }
+
+  .footer-copyright {
+    font-size: var(--font-size-body-xsmall);
+  }
+
+  .footer-aws-text {
+    font-size: var(--font-size-body-xsmall);
+  }
+
+  .aws-badge {
+    font-size: var(--font-size-body-xsmall);
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+}

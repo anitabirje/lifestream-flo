@@ -56,7 +56,7 @@ export class ThresholdService {
     }
 
     const dynamoItem = thresholdToDynamoDB(threshold);
-    await this.dataAccess.putItem(dynamoItem);
+    await this.dataAccess.putItem(dynamoItem as any);
 
     return threshold;
   }
@@ -103,7 +103,7 @@ export class ThresholdService {
     }
 
     const dynamoItem = thresholdToDynamoDB(updated);
-    await this.dataAccess.putItem(dynamoItem);
+    await this.dataAccess.putItem(dynamoItem as any);
 
     return updated;
   }

@@ -93,7 +93,7 @@ export class RecoveryManager {
           endTime: new Date().toISOString(),
         };
 
-        await this.dataAccess.putItem(updated);
+        await this.dataAccess.putItem(updated as any);
       }
     } catch (error) {
       console.error('Failed to update recovery status:', error);
@@ -252,7 +252,7 @@ export class RecoveryManager {
   async getRecoveryOperation(operationId: string): Promise<RecoveryOperation | null> {
     try {
       const operation = await this.dataAccess.getItem(`RECOVERY#${operationId}`, `RECOVERY#${operationId}`);
-      return (operation as RecoveryOperation) || null;
+      return (operation as unknown as RecoveryOperation) || null;
     } catch (error) {
       console.error('Failed to get recovery operation:', error);
       throw error;
