@@ -21,10 +21,14 @@ lifestream-flo/
 
 ## Setup
 
-1. Install dependencies and build packages (backend and frontend):
+1. Install dependencies and build all packages:
 ```bash
 npm run install:all
+npm run build
 
+```
+1a. Install dependencies and build changes to individual packages (backend and frontend):
+```bash
 cd packages/backend
 npm i
 npm run build
@@ -32,7 +36,6 @@ npm run build
 cd ../../packages/frontend
 npm i
 mpm run build 
-
 ```
 
 2. Configure environment variables:
