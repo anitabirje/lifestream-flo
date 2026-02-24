@@ -102,3 +102,19 @@ npm run build
 - Progressive Web App with offline support
 - Push notifications (with user permission)
 - 3-month data retention policy
+
+## Target Users
+
+Flo serves busy families who struggle with:
+
+    Coordinating multiple schedules across family members
+    Tracking time allocation against personal and family goals
+    Detecting and resolving scheduling conflicts proactively
+    Maintaining work-life balance with data-driven insights
+    Managing children's extracurricular activities and school events
+
+## Key Benefits
+
+Efficiency: Reduces time spent on schedule coordination by 70% Visibility: Provides complete family schedule transparency in one view Proactivity: Detects conflicts and suggests solutions before they become problems Balance: Enables data-driven decisions about time allocation and priorities Accessibility: Works offline as a PWA, accessible on any device anywhere
+
+Flo transforms family scheduling from a reactive, chaotic process into a proactive, organized system that helps families spend less time coordinating and more time together.
